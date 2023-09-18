@@ -2,7 +2,6 @@ import React, {memo} from 'react';
 import {FlatList, StyleSheet, ListRenderItem} from 'react-native';
 import MusicSheet from '@/core/musicSheet';
 import {ROUTE_PATH, useNavigate} from '@/entry/router';
-import useDialog from '@/components/dialogs/useDialog';
 import ListItem from '@/components/base/listItem';
 import IconButton from '@/components/base/iconButton';
 import {ImgAsset} from '@/constants/assetsConst';
@@ -10,12 +9,12 @@ import Toast from '@/utils/toast';
 import sheetHeader from './sheetHeader';
 import rpx from '@/utils/rpx';
 import useOrientation from '@/hooks/useOrientation';
+import {showDialog} from '@/components/dialogs/useDialog';
 
 function MySheets() {
     const orientation = useOrientation();
     const musicSheets = MusicSheet.useUserSheets();
     const navigate = useNavigate();
-    const {showDialog} = useDialog();
 
     const renderMySheetItem: ListRenderItem<IMusic.IMusicSheetItem> =
         function ({item: sheet}) {
@@ -23,7 +22,7 @@ function MySheets() {
                 <ListItem
                     key={`${sheet.id}`}
                     title={sheet.title}
-                    itemPaddingHorizontal={0}
+                    itemPaddingHorizontal={12}
                     left={{
                         artwork: sheet.coverImg,
                         fallback: ImgAsset.albumDefault,
@@ -77,7 +76,6 @@ const style = StyleSheet.create({
     wrapper: {
         flexGrow: 1,
         marginHorizontal: rpx(24),
-        paddingHorizontal: rpx(24),
         paddingBottom: rpx(64),
         backgroundColor: '#eeeeee22',
         marginBottom: rpx(24),

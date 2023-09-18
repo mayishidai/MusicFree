@@ -1,11 +1,17 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {LayoutRectangle, StyleSheet, Text, View} from 'react-native';
+import {
+    DeviceEventEmitter,
+    LayoutRectangle,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import rpx, {vh} from '@/utils/rpx';
 import MusicQueue from '@/core/musicQueue';
 import LyricParser from '@/core/lrcParser';
 import ThemeText from '@/components/base/themeText';
 import useDelayFalsy from '@/hooks/useDelayFalsy';
-import {FlatList} from 'react-native-gesture-handler';
+import {FlatList, TapGestureHandler} from 'react-native-gesture-handler';
 import timeformat from '@/utils/timeformat';
 import {fontSizeConst} from '@/constants/uiConst';
 import {IconButtonWithGesture} from '@/components/base/iconButton';
@@ -15,6 +21,8 @@ import Loading from '@/components/base/loading';
 import {isSameMediaItem} from '@/utils/mediaItem';
 import PluginManager from '@/core/pluginManager';
 import globalStyle from '@/constants/globalStyle';
+import {showPanel} from '@/components/panels/usePanel';
+import {EDeviceEvents} from '@/constants/commonConst';
 
 interface ICurrentLyricItem {
     lrc?: ILyric.IParsedLrcItem;
@@ -32,6 +40,36 @@ function useLyric() {
     const [meta, setMeta] = useState<Record<string, any>>({});
     const [currentLrcItem, setCurentLrcItem] = useState<ICurrentLyricItem>();
 
+    async function refreshLyric() {
+        setLoading(true);
+        try {
+            const lrc = await PluginManager.getByMedia(
+                musicItem,
+            )?.methods?.getLyricText(musicItem);
+            setLoading(false);
+            trace(musicItem.title, lrc);
+            if (isSameMediaItem(musicItem, musicItemRef.current)) {
+                if (lrc) {
+                    const parser = new LyricParser(lrc, musicItem);
+                    setLyric(parser.getLyric());
+                    setMeta(parser.getMeta());
+                    lrcManagerRef.current = parser;
+                } else {
+                    setLyric([]);
+                    setMeta({});
+                    lrcManagerRef.current = undefined;
+                }
+            }
+        } catch {
+            if (isSameMediaItem(musicItem, musicItemRef.current)) {
+                setLyric([]);
+                setMeta({});
+                lrcManagerRef.current = undefined;
+            }
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         if (
             !lrcManagerRef.current ||
@@ -40,33 +78,7 @@ function useLyric() {
                 musicItem,
             )
         ) {
-            setLoading(true);
-            PluginManager.getByMedia(musicItem)
-                ?.methods?.getLyricText(musicItem)
-                ?.then(lrc => {
-                    setLoading(false);
-                    trace(musicItem.title, lrc);
-                    if (isSameMediaItem(musicItem, musicItemRef.current)) {
-                        if (lrc) {
-                            const parser = new LyricParser(lrc, musicItem);
-                            setLyric(parser.getLyric());
-                            setMeta(parser.getMeta());
-                            lrcManagerRef.current = parser;
-                        } else {
-                            setLyric([]);
-                            setMeta({});
-                            lrcManagerRef.current = undefined;
-                        }
-                    }
-                })
-                ?.catch(_ => {
-                    if (isSameMediaItem(musicItem, musicItemRef.current)) {
-                        setLyric([]);
-                        setMeta({});
-                        lrcManagerRef.current = undefined;
-                    }
-                    setLoading(false);
-                });
+            refreshLyric();
         }
         musicItemRef.current = musicItem;
     }, [musicItem]);
@@ -78,6 +90,16 @@ function useLyric() {
             );
         }
     }, [progress, lyric]);
+
+    useEffect(() => {
+        const unsubscription = DeviceEventEmitter.addListener(
+            EDeviceEvents.REFRESH_LYRIC,
+            refreshLyric,
+        );
+        return () => {
+            unsubscription.remove();
+        };
+    }, []);
 
     return {lyric, currentLrcItem, meta, loading, progress} as const;
 }
@@ -163,7 +185,7 @@ export default function Lyric() {
         <View style={globalStyle.fwflex1}>
             {loading ? (
                 <Loading />
-            ) : (
+            ) : lyric?.length ? (
                 <FlatList
                     ref={_ => {
                         listRef.current = _;
@@ -173,13 +195,6 @@ export default function Lyric() {
                         offset: ITEM_HEIGHT * index,
                         index,
                     })}
-                    ListEmptyComponent={
-                        <View style={globalStyle.flex1}>
-                            <ThemeText style={style.highlightItem}>
-                                暂无歌词
-                            </ThemeText>
-                        </View>
-                    }
                     onLayout={e => {
                         setLayout(e.nativeEvent.layout);
                     }}
@@ -195,6 +210,7 @@ export default function Lyric() {
                     extraData={currentLrcItem}
                     renderItem={({item, index}) => (
                         <ThemeText
+                            numberOfLines={2}
                             style={[
                                 index === currentLrcItem?.index
                                     ? style.highlightItem
@@ -207,6 +223,19 @@ export default function Lyric() {
                         </ThemeText>
                     )}
                 />
+            ) : (
+                // TODO 搜索歌词
+                <View style={globalStyle.fullCenter}>
+                    <ThemeText style={style.highlightItem}>暂无歌词</ThemeText>
+                    <TapGestureHandler
+                        onActivated={() => {
+                            showPanel('SearchLrc', {
+                                musicItem: MusicQueue.getCurrentMusicItem(),
+                            });
+                        }}>
+                        <Text style={style.searchLyric}>搜索歌词</Text>
+                    </TapGestureHandler>
+                </View>
             )}
             {draggingIndex !== undefined && (
                 <View
@@ -295,5 +324,13 @@ const style = StyleSheet.create({
     playIcon: {
         width: rpx(90),
         textAlign: 'right',
+    },
+    searchLyric: {
+        width: rpx(180),
+        paddingVertical: rpx(10),
+        textAlign: 'center',
+        alignSelf: 'center',
+        color: '#66eeff',
+        textDecorationLine: 'underline',
     },
 });

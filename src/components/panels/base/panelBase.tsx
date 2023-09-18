@@ -31,12 +31,13 @@ const timingConfig = {
 };
 
 interface IPanelBaseProps {
+    keyboardAvoidBehavior?: 'height' | 'padding' | 'position' | 'none';
     height?: number;
     renderBody: (loading: boolean) => JSX.Element;
 }
 
 export default function (props: IPanelBaseProps) {
-    const {height = vh(60), renderBody} = props;
+    const {height = vh(60), renderBody, keyboardAvoidBehavior} = props;
     const snapPoint = useSharedValue(0);
 
     const colors = useColors();
@@ -146,6 +147,23 @@ export default function (props: IPanelBaseProps) {
         [],
     );
 
+    const panelBody = (
+        <Animated.View
+            style={[
+                style.wrapper,
+                {
+                    backgroundColor: colors.primary,
+                    height:
+                        orientation === 'horizonal'
+                            ? vh(100) - safeAreaInsets.top
+                            : height,
+                },
+                panelAnimated,
+            ]}>
+            {renderBody(loading)}
+        </Animated.View>
+    );
+
     return (
         <>
             <Pressable
@@ -157,22 +175,14 @@ export default function (props: IPanelBaseProps) {
                     style={[style.maskWrapper, style.mask, maskAnimated]}
                 />
             </Pressable>
-            <KeyboardAvoidingView behavior="position">
-                <Animated.View
-                    style={[
-                        style.wrapper,
-                        {
-                            backgroundColor: colors.primary,
-                            height:
-                                orientation === 'horizonal'
-                                    ? vh(100) - safeAreaInsets.top
-                                    : height,
-                        },
-                        panelAnimated,
-                    ]}>
-                    {renderBody(loading)}
-                </Animated.View>
-            </KeyboardAvoidingView>
+            {keyboardAvoidBehavior === 'none' ? (
+                panelBody
+            ) : (
+                <KeyboardAvoidingView
+                    behavior={keyboardAvoidBehavior || 'position'}>
+                    {panelBody}
+                </KeyboardAvoidingView>
+            )}
         </>
     );
 }

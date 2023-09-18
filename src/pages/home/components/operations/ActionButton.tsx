@@ -2,7 +2,8 @@ import ThemeText from '@/components/base/themeText';
 import rpx from '@/utils/rpx';
 import React from 'react';
 import {StyleSheet} from 'react-native';
-import {TouchableRipple, useTheme} from 'react-native-paper';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import {useTheme} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface IActionButtonProps {
@@ -17,21 +18,23 @@ export default function ActionButton(props: IActionButtonProps) {
     const {colors} = useTheme();
     // rippleColor="rgba(0, 0, 0, .32)"
     return (
-        <TouchableRipple onPress={action} style={style.wrapper}>
+        <TouchableOpacity onPress={action} style={style.wrapper}>
             <>
                 <Icon
+                    accessible={false}
                     name={iconName}
                     color={iconColor ?? colors.text}
                     size={rpx(48)}
                 />
                 <ThemeText
+                    accessible={false}
                     fontSize="subTitle"
                     fontWeight="semibold"
                     style={style.text}>
                     {title}
                 </ThemeText>
             </>
-        </TouchableRipple>
+        </TouchableOpacity>
     );
 }
 

@@ -6,12 +6,11 @@ import DocumentPicker from 'react-native-document-picker';
 import Loading from '@/components/base/loading';
 import ListItem from '@/components/base/listItem';
 
-import useDialog from '@/components/dialogs/useDialog';
 import useColors from '@/hooks/useColors';
 import {fontSizeConst, fontWeightConst} from '@/constants/uiConst';
 import PluginManager, {Plugin, PluginStateCode} from '@/core/pluginManager';
 import {trace} from '@/utils/log';
-import usePanel from '@/components/panels/usePanel';
+
 import Toast from '@/utils/toast';
 import axios from 'axios';
 import {addRandomHash} from '@/utils/fileUtils';
@@ -21,6 +20,8 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import Config from '@/core/config';
 import Empty from '@/components/base/empty';
 import HorizonalSafeAreaView from '@/components/base/horizonalSafeAreaView';
+import {showDialog} from '@/components/dialogs/useDialog';
+import {showPanel} from '@/components/panels/usePanel';
 
 const ITEM_HEIGHT_BIG = rpx(120);
 
@@ -29,8 +30,6 @@ export default function PluginList() {
     const [loading, setLoading] = useState(false);
     const [fabOpen, setFabOpen] = useState(false);
     const colors = useColors();
-    const {showPanel} = usePanel();
-    const {showDialog} = useDialog();
 
     const navigator = useNavigation<any>();
 
@@ -217,8 +216,7 @@ interface IPluginViewProps {
 function PluginView(props: IPluginViewProps) {
     const {plugin} = props;
     const colors = useColors();
-    const {showDialog} = useDialog();
-    const {showPanel} = usePanel();
+
     const options = [
         {
             title: '导入单曲',

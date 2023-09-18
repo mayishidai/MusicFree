@@ -2,14 +2,13 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
 import MusicSheet from '@/core/musicSheet';
-import usePanel from '@/components/panels/usePanel';
+
 import IconButton from '@/components/base/iconButton';
 import ThemeText from '@/components/base/themeText';
+import {showPanel} from '@/components/panels/usePanel';
 
 export default function () {
     const musicSheets = MusicSheet.useUserSheets();
-
-    const {showPanel} = usePanel();
 
     return (
         <View style={style.header}>
@@ -20,6 +19,7 @@ export default function () {
                 <IconButton
                     name="plus"
                     size="normal"
+                    accessibilityLabel="新建歌单"
                     onPress={() => {
                         showPanel('NewMusicSheet');
                     }}
@@ -43,6 +43,7 @@ const style = StyleSheet.create({
         height: rpx(72),
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: rpx(24),
     },
     more: {
         flexDirection: 'row',

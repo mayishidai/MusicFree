@@ -37,6 +37,10 @@ interface IConfig {
             defaultDownloadQuality: IMusic.IQualityKey;
             /** 下载音质顺序 */
             downloadQualityOrder: 'asc' | 'desc';
+            /** 歌曲详情页 */
+            musicDetailDefault: 'album' | 'lyric';
+            /** 歌曲详情页常亮 */
+            musicDetailAwake: boolean;
             debug: {
                 errorLog: boolean;
                 traceLog: boolean;

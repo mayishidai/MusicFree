@@ -98,8 +98,6 @@ export class Plugin {
     public hash: string;
     /** 插件状态：激活、关闭、错误 */
     public state: 'enabled' | 'disabled' | 'error';
-    /** 插件支持的搜索类型 */
-    public supportedSearchType?: string;
     /** 插件状态信息 */
     public stateCode?: PluginStateCode;
     /** 插件的实例 */
@@ -971,12 +969,21 @@ function getValidPlugins() {
     return plugins.filter(_ => _.state === 'enabled');
 }
 
-function getSearchablePlugins() {
-    return plugins.filter(_ => _.state === 'enabled' && _.instance.search);
+function getSearchablePlugins(supportedSearchType?: ICommon.SupportMediaType) {
+    return plugins.filter(
+        _ =>
+            _.state === 'enabled' &&
+            _.instance.search &&
+            (supportedSearchType && _.instance.supportedSearchType
+                ? _.instance.supportedSearchType.includes(supportedSearchType)
+                : true),
+    );
 }
 
-function getSortedSearchablePlugins() {
-    return getSearchablePlugins().sort((a, b) =>
+function getSortedSearchablePlugins(
+    supportedSearchType?: ICommon.SupportMediaType,
+) {
+    return getSearchablePlugins(supportedSearchType).sort((a, b) =>
         (PluginMeta.getPluginMeta(a).order ?? Infinity) -
             (PluginMeta.getPluginMeta(b).order ?? Infinity) <
         0

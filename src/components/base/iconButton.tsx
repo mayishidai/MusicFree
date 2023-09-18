@@ -12,15 +12,25 @@ interface IIconButtonProps {
     size?: keyof typeof iconSizeConst;
     fontColor?: ColorKey;
     onPress?: () => void;
+    accessibilityLabel?: string;
 }
 export function IconButtonWithGesture(props: IIconButtonProps) {
-    const {name, size = 'normal', fontColor = 'normal', onPress, style} = props;
+    const {
+        name,
+        size = 'normal',
+        fontColor = 'normal',
+        onPress,
+        style,
+        accessibilityLabel,
+    } = props;
     const theme = useTheme();
     const textSize = iconSizeConst[size];
     const color = theme.colors[colorMap[fontColor]];
     return (
         <TapGestureHandler onActivated={onPress}>
             <Icon
+                accessible
+                accessibilityLabel={accessibilityLabel}
                 name={name}
                 color={color}
                 style={[{minWidth: textSize}, styles.textCenter, style]}
@@ -31,15 +41,24 @@ export function IconButtonWithGesture(props: IIconButtonProps) {
 }
 
 export default function IconButton(props: IIconButtonProps) {
-    const {name, size = 'normal', fontColor = 'normal', onPress, style} = props;
+    const {
+        name,
+        size = 'normal',
+        fontColor = 'normal',
+        onPress,
+        style,
+        accessibilityLabel,
+    } = props;
     const theme = useTheme();
     const textSize = iconSizeConst[size];
     const color = theme.colors[colorMap[fontColor]];
     return (
         <Icon
+            accessible
+            onPress={onPress}
+            accessibilityLabel={accessibilityLabel}
             name={name}
             color={color}
-            onPress={onPress}
             style={[{minWidth: textSize}, styles.textCenter, style]}
             size={textSize}
         />

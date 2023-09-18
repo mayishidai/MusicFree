@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {DeviceEventEmitter, StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
 import {Divider} from 'react-native-paper';
 import MusicQueue from '@/core/musicQueue';
@@ -16,14 +16,19 @@ import Cache from '@/core/cache';
 import FastImage from '@/components/base/fastImage';
 import Toast from '@/utils/toast';
 import LocalMusicSheet from '@/core/localMusicSheet';
-import {localMusicSheetId, musicHistorySheetId} from '@/constants/commonConst';
+import {
+    EDeviceEvents,
+    localMusicSheetId,
+    musicHistorySheetId,
+} from '@/constants/commonConst';
 import {ROUTE_PATH} from '@/entry/router';
-import usePanel from '../usePanel';
-import useDialog from '@/components/dialogs/useDialog';
+
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import PanelBase from '../base/panelBase';
 import {FlatList} from 'react-native-gesture-handler';
 import musicHistory from '@/core/musicHistory';
+import {showDialog} from '@/components/dialogs/useDialog';
+import {hidePanel, showPanel} from '../usePanel';
 
 interface IMusicItemOptionsProps {
     /** 歌曲信息 */
@@ -39,8 +44,6 @@ const ITEM_HEIGHT = rpx(96);
 export default function MusicItemOptions(props: IMusicItemOptionsProps) {
     const {musicItem, musicSheet, from} = props ?? {};
 
-    const {showPanel, hidePanel} = usePanel();
-    const {showDialog} = useDialog();
     const safeAreaInsets = useSafeAreaInsets();
 
     const downloaded = LocalMusicSheet.isLocalMusic(musicItem);
@@ -162,10 +165,11 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
             icon: 'link-variant-remove',
             title: '解除关联歌词',
             show: !!associatedLrc,
-            onPress: () => {
-                MediaMeta.update(musicItem, {
+            onPress: async () => {
+                await MediaMeta.update(musicItem, {
                     associatedLrc: undefined,
                 });
+                DeviceEventEmitter.emit(EDeviceEvents.REFRESH_LYRIC);
                 Toast.success('已解除关联歌词');
                 hidePanel();
             },
@@ -238,7 +242,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                                             },
                                             width: rpx(48),
                                         }}
-                                        itemPaddingHorizontal={0}
+                                        itemPaddingHorizontal={12}
                                         itemHeight={ITEM_HEIGHT}
                                         title={item.title}
                                         onPress={item.onPress}
@@ -265,7 +269,6 @@ const style = StyleSheet.create({
         padding: rpx(24),
     },
     listWrapper: {
-        paddingHorizontal: rpx(24),
         paddingTop: rpx(12),
     },
     artwork: {
