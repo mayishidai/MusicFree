@@ -1,3 +1,4 @@
+import {CustomizedColors} from '@/hooks/useColors';
 import rpx from '@/utils/rpx';
 
 const fontSizeConst = {
@@ -25,15 +26,18 @@ const fontWeightConst = {
 
 const iconSizeConst = {
     small: rpx(32),
+    light: rpx(40),
     normal: rpx(48),
     big: rpx(64),
+    large: rpx(88),
 };
 
-type ColorKey = 'normal' | 'secondary' | 'highlight';
-const colorMap: Record<ColorKey, keyof ReactNativePaper.ThemeColors> = {
+type ColorKey = 'normal' | 'secondary' | 'highlight' | 'primary';
+const colorMap: Record<ColorKey, keyof CustomizedColors> = {
     normal: 'text',
     secondary: 'textSecondary',
     highlight: 'textHighlight',
+    primary: 'primary',
 } as const;
 
 export {fontSizeConst, fontWeightConst, iconSizeConst, colorMap};

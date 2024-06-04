@@ -1,202 +1,346 @@
-import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import React, {ReactNode} from 'react';
+import {
+    StyleProp,
+    StyleSheet,
+    TextProps,
+    TextStyle,
+    TouchableHighlight,
+    TouchableOpacity,
+    View,
+    ViewStyle,
+} from 'react-native';
 import rpx from '@/utils/rpx';
-import {List} from 'react-native-paper';
-import Tag from './tag';
+import useColors from '@/hooks/useColors';
 import ThemeText from './themeText';
-import IconButton from './iconButton';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+    fontSizeConst,
+    fontWeightConst,
+    iconSizeConst,
+} from '@/constants/uiConst';
 import FastImage from './fastImage';
-import {fontSizeConst} from '@/constants/uiConst';
+import {ImageStyle} from 'react-native-fast-image';
 
-export interface ILeftProps {
-    /** 序号 */
-    index?: number | string;
-    /** 封面图 */
-    artwork?: string;
-    /** 封面图的兜底 */
-    fallback?: any;
-    /** icon */
-    icon?: Parameters<typeof IconButton>[0];
-    /** 宽度 */
-    width?: number;
-    /** 组件 */
-    component?: () => JSX.Element;
-}
-
-function Left(props?: ILeftProps) {
-    const {
-        index,
-        artwork,
-        fallback,
-        icon,
-        width = rpx(100),
-        component: Component,
-    } = props ?? {};
-
-    return props && Object.keys(props).length ? (
-        Component ? (
-            <Component />
-        ) : (
-            <View style={[leftStyle.artworkWrapper, {width}]}>
-                {index !== undefined ? (
-                    <ThemeText
-                        fontColor="secondary"
-                        style={{
-                            fontStyle: 'italic',
-                            fontSize: Math.min(
-                                (width / `${index}`.length) * 0.8,
-                                fontSizeConst.content,
-                            ),
-                        }}>
-                        {index}
-                    </ThemeText>
-                ) : icon !== undefined ? (
-                    <IconButton {...icon} />
-                ) : (
-                    <FastImage
-                        style={leftStyle.artwork}
-                        uri={
-                            artwork?.startsWith('//')
-                                ? `https:${artwork}`
-                                : artwork
-                        }
-                        emptySrc={fallback}
-                    />
-                )}
-            </View>
-        )
-    ) : null;
-}
-
-const leftStyle = StyleSheet.create({
-    artworkWrapper: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    artwork: {
-        width: rpx(76),
-        height: rpx(76),
-        borderRadius: rpx(16),
-    },
-});
-
-/** 歌单item */
 interface IListItemProps {
-    /** 标题 */
-    title: string | number;
-    /** 描述 */
-    desc?: string | JSX.Element;
-    /** 标签 */
-    tag?: string;
-    left?: ILeftProps;
-    /** 右侧按钮 */
-    right?: () => JSX.Element;
-    itemPaddingHorizontal?: number;
-    itemPaddingLeft?: number;
-    itemPaddingRight?: number;
-    itemWidth?: number | string;
-    itemHeight?: number;
-    itemBackgroundColor?: string;
+    // 是否有左右边距
+    withHorizonalPadding?: boolean;
+    // 左边距
+    leftPadding?: number;
+    // 右边距
+    rightPadding?: number;
+    // height:
+    style?: StyleProp<ViewStyle>;
+    // 高度类型
+    heightType?: 'big' | 'small' | 'smallest' | 'normal' | 'none';
+    children?: ReactNode;
     onPress?: () => void;
     onLongPress?: () => void;
 }
 
-export default function ListItem(props: IListItemProps) {
+const defaultPadding = rpx(24);
+const defaultActionWidth = rpx(80);
+
+const Size = {
+    big: rpx(120),
+    normal: rpx(108),
+    small: rpx(96),
+    smallest: rpx(72),
+    none: undefined,
+};
+
+function ListItem(props: IListItemProps) {
     const {
-        title,
-        desc,
-        tag,
-        right,
-        itemWidth,
-        itemHeight,
+        withHorizonalPadding,
+        leftPadding = defaultPadding,
+        rightPadding = defaultPadding,
+        style,
+        heightType = 'normal',
+        children,
         onPress,
         onLongPress,
-        left,
-        itemBackgroundColor,
-        itemPaddingHorizontal = rpx(24),
-        itemPaddingLeft,
-        itemPaddingRight,
     } = props;
 
+    const defaultStyle: StyleProp<ViewStyle> = {
+        paddingLeft: withHorizonalPadding ? leftPadding : 0,
+        paddingRight: withHorizonalPadding ? rightPadding : 0,
+        height: Size[heightType],
+    };
+
+    const colors = useColors();
+
     return (
-        <List.Item
-            onLongPress={onLongPress}
-            left={() => <Left {...(left ?? {})} />}
-            style={[
-                style.wrapper,
-                {
-                    paddingHorizontal: itemPaddingHorizontal,
-                    paddingLeft: itemPaddingLeft,
-                    paddingRight: itemPaddingRight,
-                    width: itemWidth,
-                    height: itemHeight ?? rpx(120),
-                    paddingVertical: 0,
-                    backgroundColor: itemBackgroundColor,
-                },
-            ]}
-            title={() => (
-                <View
-                    accessible
-                    accessibilityLabel={`${title}`}
-                    style={{
-                        alignItems: 'stretch',
-                        justifyContent: 'center',
-                        height: itemHeight ?? rpx(120),
-                        marginRight: right ? rpx(18) : 0,
-                    }}>
-                    <View style={style.titleWrapper}>
-                        <ThemeText numberOfLines={1} style={style.titleText}>
-                            {title}
-                        </ThemeText>
-                        {tag ? <Tag tagName={tag} /> : null}
-                    </View>
-                    {desc ? (
-                        <ThemeText
-                            fontColor="secondary"
-                            fontSize="description"
-                            numberOfLines={1}
-                            style={style.descText}>
-                            {desc}
-                        </ThemeText>
-                    ) : null}
-                </View>
-            )}
-            titleStyle={{
-                paddingVertical: 0,
-                marginLeft: 0,
-                marginVertical: 0,
-            }}
-            right={right ? right : () => null}
+        <TouchableHighlight
+            style={styles.container}
+            underlayColor={colors.listActive}
             onPress={onPress}
-        />
+            onLongPress={onLongPress}>
+            <View style={[styles.container, defaultStyle, style]}>
+                {children}
+            </View>
+        </TouchableHighlight>
     );
 }
-const style = StyleSheet.create({
-    wrapper: {
-        justifyContent: 'center',
+
+interface IListItemTextProps {
+    children?: number | string;
+    fontSize?: keyof typeof fontSizeConst;
+    fontWeight?: keyof typeof fontWeightConst;
+    width?: number;
+    position?: 'left' | 'right' | 'none';
+    fixedWidth?: boolean;
+    containerStyle?: StyleProp<ViewStyle>;
+    contentStyle?: StyleProp<TextStyle>;
+    contentProps?: TextProps;
+}
+
+function ListItemText(props: IListItemTextProps) {
+    const {
+        children,
+        fontSize,
+        fontWeight,
+        position = 'left',
+        fixedWidth,
+        width,
+        containerStyle,
+        contentStyle,
+        contentProps = {},
+    } = props;
+
+    const defaultStyle: StyleProp<ViewStyle> = {
+        marginRight: position === 'left' ? defaultPadding : 0,
+        marginLeft: position === 'right' ? defaultPadding : 0,
+        width: fixedWidth ? width ?? defaultActionWidth : undefined,
+        flexBasis: fixedWidth ? width ?? defaultActionWidth : undefined,
+    };
+
+    return (
+        <View style={[styles.actionBase, defaultStyle, containerStyle]}>
+            <ThemeText
+                fontSize={fontSize}
+                style={contentStyle}
+                fontWeight={fontWeight}
+                {...contentProps}>
+                {children}
+            </ThemeText>
+        </View>
+    );
+}
+
+interface IListItemIconProps {
+    icon: string;
+    iconSize?: number;
+    width?: number;
+    position?: 'left' | 'right' | 'none';
+    fixedWidth?: boolean;
+    containerStyle?: StyleProp<ViewStyle>;
+    contentStyle?: StyleProp<TextStyle>;
+    onPress?: () => void;
+}
+
+function ListItemIcon(props: IListItemIconProps) {
+    const {
+        icon,
+        iconSize = iconSizeConst.normal,
+        position = 'left',
+        fixedWidth,
+        width,
+        containerStyle,
+        contentStyle,
+        onPress,
+    } = props;
+
+    const colors = useColors();
+
+    const defaultStyle: StyleProp<ViewStyle> = {
+        marginRight: position === 'left' ? defaultPadding : 0,
+        marginLeft: position === 'right' ? defaultPadding : 0,
+        width: fixedWidth ? width ?? defaultActionWidth : undefined,
+        flexBasis: fixedWidth ? width ?? defaultActionWidth : undefined,
+    };
+
+    const innerContent = (
+        <View style={[styles.actionBase, defaultStyle, containerStyle]}>
+            <Icon
+                name={icon}
+                size={iconSize}
+                style={contentStyle}
+                color={colors.text}
+            />
+        </View>
+    );
+
+    return onPress ? (
+        <TouchableOpacity onPress={onPress}>{innerContent}</TouchableOpacity>
+    ) : (
+        innerContent
+    );
+}
+
+interface IListItemImageProps {
+    uri?: string;
+    fallbackImg?: number;
+    imageSize?: number;
+    width?: number;
+    position?: 'left' | 'right';
+    fixedWidth?: boolean;
+    containerStyle?: StyleProp<ViewStyle>;
+    contentStyle?: StyleProp<ImageStyle>;
+    maskIcon?: string | null;
+}
+
+function ListItemImage(props: IListItemImageProps) {
+    const {
+        uri,
+        fallbackImg,
+        position = 'left',
+        fixedWidth,
+        width,
+        containerStyle,
+        contentStyle,
+        maskIcon,
+    } = props;
+
+    const defaultStyle: StyleProp<ViewStyle> = {
+        marginRight: position === 'left' ? defaultPadding : 0,
+        marginLeft: position === 'right' ? defaultPadding : 0,
+        width: fixedWidth ? width ?? defaultActionWidth : undefined,
+        flexBasis: fixedWidth ? width ?? defaultActionWidth : undefined,
+    };
+
+    return (
+        <View style={[styles.actionBase, defaultStyle, containerStyle]}>
+            <FastImage
+                style={[styles.leftImage, contentStyle]}
+                uri={uri}
+                emptySrc={fallbackImg}
+            />
+            {maskIcon ? (
+                <View style={[styles.leftImage, styles.imageMask]}>
+                    <Icon
+                        name={maskIcon}
+                        size={iconSizeConst.normal}
+                        color="red"
+                    />
+                </View>
+            ) : null}
+        </View>
+    );
+}
+
+interface IContentProps {
+    title?: ReactNode;
+    children?: ReactNode;
+    description?: ReactNode;
+    containerStyle?: StyleProp<ViewStyle>;
+}
+
+function Content(props: IContentProps) {
+    const {
+        children,
+        title = children,
+        description = null,
+        containerStyle,
+    } = props;
+
+    let realTitle;
+    let realDescription;
+
+    if (typeof title === 'string' || typeof title === 'number') {
+        realTitle = <ThemeText numberOfLines={1}>{title}</ThemeText>;
+    } else {
+        realTitle = title;
+    }
+
+    if (typeof description === 'string' || typeof description === 'number') {
+        realDescription = (
+            <ThemeText
+                numberOfLines={1}
+                fontSize="description"
+                fontColor="textSecondary"
+                style={styles.contentDesc}>
+                {description}
+            </ThemeText>
+        );
+    } else {
+        realDescription = description;
+    }
+
+    return (
+        <View style={[styles.itemContentContainer, containerStyle]}>
+            {realTitle}
+            {realDescription}
+        </View>
+    );
+}
+
+export function ListItemHeader(props: {children?: ReactNode}) {
+    const {children} = props;
+    return (
+        <ListItem
+            withHorizonalPadding
+            heightType="smallest"
+            style={styles.listItemHeader}>
+            {typeof children === 'string' ? (
+                <ThemeText
+                    fontSize="subTitle"
+                    fontColor="textSecondary"
+                    fontWeight="bold">
+                    {children}
+                </ThemeText>
+            ) : (
+                children
+            )}
+        </ListItem>
+    );
+}
+
+const styles = StyleSheet.create({
+    /** listitem */
+    container: {
         width: '100%',
-    },
-    titleWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
     },
-    titleText: {
-        flex: 1,
-        paddingRight: rpx(12),
-    },
-    descText: {
-        marginTop: rpx(18),
-    },
-    artworkWrapper: {
-        width: rpx(76),
+    /** left */
+    actionBase: {
+        height: '100%',
+        flexShrink: 0,
+        flexGrow: 0,
+        flexBasis: 0,
+        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: rpx(12),
     },
-    artwork: {
-        width: rpx(76),
-        height: rpx(76),
+
+    leftImage: {
+        width: rpx(80),
+        height: rpx(80),
         borderRadius: rpx(16),
     },
+    imageMask: {
+        position: 'absolute',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#00000022',
+    },
+    itemContentContainer: {
+        flex: 1,
+        height: '100%',
+        justifyContent: 'center',
+    },
+    contentDesc: {
+        marginTop: rpx(16),
+    },
+
+    listItemHeader: {
+        marginTop: rpx(20),
+    },
 });
+
+ListItem.Size = Size;
+ListItem.ListItemIcon = ListItemIcon;
+ListItem.ListItemImage = ListItemImage;
+ListItem.ListItemText = ListItemText;
+ListItem.Content = Content;
+
+export default ListItem;

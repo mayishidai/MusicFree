@@ -1,27 +1,35 @@
 import React, {useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 import rpx, {vmax} from '@/utils/rpx';
-import {Divider} from 'react-native-paper';
 import {fontSizeConst} from '@/constants/uiConst';
-import Color from 'color';
-import Button from '@/components/base/button';
 import useColors from '@/hooks/useColors';
 
 import ThemeText from '@/components/base/themeText';
 import {ScrollView, TextInput} from 'react-native-gesture-handler';
 import PanelBase from '../base/panelBase';
 import {hidePanel} from '../usePanel';
+import PanelHeader from '../base/panelHeader';
 
 interface ISimpleInputProps {
+    title?: string;
     onOk: (text: string, closePanel: () => void) => void;
     hints?: string[];
     onCancel?: () => void;
     maxLength?: number;
     placeholder?: string;
+    autoFocus?: boolean;
 }
 
 export default function SimpleInput(props: ISimpleInputProps) {
-    const {onOk, onCancel, placeholder, maxLength = 80, hints} = props;
+    const {
+        onOk,
+        onCancel,
+        placeholder,
+        maxLength = 80,
+        hints,
+        title,
+        autoFocus = true,
+    } = props;
 
     const [input, setInput] = useState('');
     const colors = useColors();
@@ -31,25 +39,21 @@ export default function SimpleInput(props: ISimpleInputProps) {
             height={vmax(30)}
             renderBody={() => (
                 <>
-                    <View style={style.opeartions}>
-                        <Button
-                            onPress={() => {
-                                onCancel?.();
-                                hidePanel();
-                            }}>
-                            取消
-                        </Button>
-                        <Button
-                            onPress={async () => {
-                                onOk(input, hidePanel);
-                            }}>
-                            确认
-                        </Button>
-                    </View>
-                    <Divider />
+                    <PanelHeader
+                        title={title || ''}
+                        onCancel={() => {
+                            onCancel?.();
+                            hidePanel();
+                        }}
+                        onOk={async () => {
+                            onOk(input, hidePanel);
+                        }}
+                    />
+
                     <TextInput
                         value={input}
                         accessible
+                        autoFocus={autoFocus}
                         accessibilityLabel="输入框"
                         accessibilityHint={placeholder}
                         onChangeText={_ => {
@@ -59,9 +63,7 @@ export default function SimpleInput(props: ISimpleInputProps) {
                             style.input,
                             {
                                 color: colors.text,
-                                backgroundColor: Color(colors.primary)
-                                    .lighten(0.7)
-                                    .toString(),
+                                backgroundColor: colors.placeholder,
                             },
                         ]}
                         placeholderTextColor={colors.textSecondary}
@@ -76,7 +78,7 @@ export default function SimpleInput(props: ISimpleInputProps) {
                                         key={`hint-index-${index}`}
                                         style={style.hintLine}
                                         fontSize="subTitle"
-                                        fontColor="secondary">
+                                        fontColor="textSecondary">
                                         ￮ {_}
                                     </ThemeText>
                                 ))}
@@ -102,8 +104,7 @@ const style = StyleSheet.create({
         justifyContent: 'space-between',
     },
     input: {
-        marginTop: rpx(12),
-        marginBottom: rpx(12),
+        margin: rpx(24),
         borderRadius: rpx(12),
         fontSize: fontSizeConst.content,
         lineHeight: fontSizeConst.content * 1.5,

@@ -34,6 +34,7 @@ function SheetBody(props: IProps) {
             <ScrollView
                 style={style.headerWrapper}
                 contentContainerStyle={style.header}
+                showsHorizontalScrollIndicator={false}
                 horizontal>
                 <TypeTag
                     title={firstTag.title}
@@ -53,7 +54,7 @@ function SheetBody(props: IProps) {
                 {(tags?.pinned ?? []).map(_ => (
                     <TypeTag
                         key={`pinned-${_.id}`}
-                        title={_.title}
+                        title={_?.title ?? ''}
                         selected={selectedTag.id === _.id}
                         onPress={() => {
                             setSelectedTag(_);

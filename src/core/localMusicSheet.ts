@@ -90,11 +90,18 @@ export async function removeMusic(
             musicItem[internalSerializeKey]?.localPath ??
             localMusicItem[internalSerializeKey]?.localPath;
         if (deleteOriginalFile && localPath) {
-            await unlink(localPath);
+            try {
+                await unlink(localPath);
+            } catch (e: any) {
+                if (e.message !== 'File does not exist') {
+                    throw e;
+                }
+            }
         }
     }
     localSheet = newSheet;
     localSheetStateMapper.notify();
+    saveLocalSheet();
 }
 
 function parseFilename(fn: string): Partial<IMusic.IMusicItem> | null {

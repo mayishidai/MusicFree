@@ -1,25 +1,21 @@
 import React, {memo, useEffect, useState} from 'react';
-import {Keyboard, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Keyboard, StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import MusicQueue from '@/core/musicQueue';
-import {IconButton, useTheme} from 'react-native-paper';
 import {CircularProgressBase} from 'react-native-circular-progress-indicator';
-import {ROUTE_PATH, useNavigate} from '@/entry/router';
 
-import musicIsPaused from '@/utils/musicIsPaused';
-
-import Color from 'color';
-import ThemeText from '../base/themeText';
-import {ImgAsset} from '@/constants/assetsConst';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {showPanel} from '../panels/usePanel';
-import FastImage from '../base/fastImage';
+import useColors from '@/hooks/useColors';
+import IconButton from '../base/iconButton';
+import TrackPlayer from '@/core/trackPlayer';
+import {musicIsPaused} from '@/utils/trackUtils';
+import MusicInfo from './musicInfo';
 
 function CircularPlayBtn() {
-    const progress = MusicQueue.useProgress();
-    const musicState = MusicQueue.usePlaybackState();
-    const {colors} = useTheme();
+    const progress = TrackPlayer.useProgress();
+    const musicState = TrackPlayer.useMusicState();
+    const colors = useColors();
 
     const isPaused = musicIsPaused(musicState);
 
@@ -35,17 +31,18 @@ function CircularPlayBtn() {
             }
             duration={100}
             radius={rpx(36)}
-            activeStrokeColor={colors.text}
-            inActiveStrokeColor={Color(colors.text).alpha(0.5).toString()}>
+            activeStrokeColor={colors.musicBarText}
+            inActiveStrokeColor={colors.textSecondary}>
             <IconButton
-                accessibilityLabel={isPaused ? '播放' : '暂停'}
-                icon={isPaused ? 'play' : 'pause'}
-                size={rpx(48)}
+                accessibilityLabel={'播放或暂停歌曲'}
+                name={isPaused ? 'play' : 'pause'}
+                sizeType={'normal'}
+                color={colors.musicBarText}
                 onPress={async () => {
                     if (isPaused) {
-                        await MusicQueue.play();
+                        await TrackPlayer.play();
                     } else {
-                        await MusicQueue.pause();
+                        await TrackPlayer.pause();
                     }
                 }}
             />
@@ -53,12 +50,11 @@ function CircularPlayBtn() {
     );
 }
 function MusicBar() {
-    const musicItem = MusicQueue.useCurrentMusicItem();
+    const musicItem = TrackPlayer.useCurrentMusic();
 
     const [showKeyboard, setKeyboardStatus] = useState(false);
 
-    const navigate = useNavigate();
-    const {colors} = useTheme();
+    const colors = useColors();
     const safeAreaInsets = useSafeAreaInsets();
 
     useEffect(() => {
@@ -78,46 +74,21 @@ function MusicBar() {
     return (
         <>
             {musicItem && !showKeyboard && (
-                <Pressable
+                <View
                     style={[
                         style.wrapper,
                         {
-                            backgroundColor: Color(colors.primary)
-                                .alpha(0.66)
-                                .toString(),
-                            paddingLeft: safeAreaInsets.left + rpx(24),
+                            backgroundColor: colors.musicBar,
                             paddingRight: safeAreaInsets.right + rpx(24),
                         },
                     ]}
                     accessible
                     accessibilityLabel={`歌曲: ${musicItem.title} 歌手: ${musicItem.artist}`}
-                    onPress={() => {
-                        navigate(ROUTE_PATH.MUSIC_DETAIL);
-                    }}>
-                    <View style={style.artworkWrapper}>
-                        <FastImage
-                            style={style.artworkImg}
-                            uri={musicItem.artwork}
-                            emptySrc={ImgAsset.albumDefault}
-                        />
-                    </View>
-                    <Text
-                        ellipsizeMode="tail"
-                        accessible={false}
-                        style={style.textWrapper}
-                        numberOfLines={1}>
-                        <ThemeText fontSize="content">
-                            {musicItem?.title}
-                        </ThemeText>
-                        {musicItem?.artist && (
-                            <ThemeText
-                                fontSize="description"
-                                fontColor="secondary">
-                                {' '}
-                                -{musicItem.artist}
-                            </ThemeText>
-                        )}
-                    </Text>
+                    // onPress={() => {
+                    //     navigate(ROUTE_PATH.MUSIC_DETAIL);
+                    // }}
+                >
+                    <MusicInfo musicItem={musicItem} />
                     <View style={style.actionGroup}>
                         <CircularPlayBtn />
                         <Icon
@@ -128,10 +99,13 @@ function MusicBar() {
                             onPress={() => {
                                 showPanel('PlayList');
                             }}
-                            style={[style.actionIcon, {color: colors.text}]}
+                            style={[
+                                style.actionIcon,
+                                {color: colors.musicBarText},
+                            ]}
                         />
                     </View>
-                </Pressable>
+                </View>
             )}
         </>
     );
@@ -142,18 +116,10 @@ export default memo(MusicBar, () => true);
 const style = StyleSheet.create({
     wrapper: {
         width: '100%',
-        height: rpx(120),
+        height: rpx(132),
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: rpx(24),
-    },
-    artworkWrapper: {
-        height: rpx(120),
-        width: rpx(120),
-    },
-    textWrapper: {
-        flexGrow: 1,
-        flexShrink: 1,
+        paddingRight: rpx(24),
     },
     actionGroup: {
         width: rpx(200),
@@ -163,10 +129,5 @@ const style = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: rpx(36),
-    },
-    artworkImg: {
-        width: rpx(96),
-        height: rpx(96),
-        borderRadius: rpx(48),
     },
 });

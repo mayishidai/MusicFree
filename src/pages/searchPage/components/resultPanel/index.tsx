@@ -8,8 +8,7 @@ import {SceneMap, TabBar, TabView} from 'react-native-tab-view';
 import ResultSubPanel from './resultSubPanel';
 import results from './results';
 import {fontWeightConst} from '@/constants/uiConst';
-import {useTheme} from 'react-native-paper';
-import Color from 'color';
+import useColors from '@/hooks/useColors';
 
 const routes = results;
 
@@ -27,7 +26,7 @@ const renderScene = getRouterScene(routes);
 
 function ResultPanel() {
     const [index, setIndex] = useState(0);
-    const {colors} = useTheme();
+    const colors = useColors();
 
     return (
         <TabView
@@ -41,35 +40,35 @@ function ResultPanel() {
                     {...props}
                     scrollEnabled
                     style={{
-                        backgroundColor: Color(colors.primary)
-                            .alpha(0.7)
-                            .toString(),
+                        backgroundColor: colors.tabBar,
                         shadowColor: 'transparent',
                         borderColor: 'transparent',
                     }}
+                    inactiveColor={colors.text}
+                    activeColor={colors.primary}
                     tabStyle={{
-                        width: rpx(200),
+                        width: 'auto',
                     }}
                     renderLabel={({route, focused, color}) => (
                         <Text
+                            numberOfLines={1}
                             style={{
+                                width: rpx(160),
                                 fontWeight: focused
                                     ? fontWeightConst.bolder
-                                    : fontWeightConst.bold,
+                                    : fontWeightConst.medium,
                                 color,
+                                textAlign: 'center',
                             }}>
                             {route.title}
                         </Text>
                     )}
                     indicatorStyle={{
-                        backgroundColor: colors.text,
+                        backgroundColor: colors.primary,
                         height: rpx(4),
                     }}
                 />
             )}
-            style={{
-                backgroundColor: colors.background,
-            }}
             renderScene={renderScene}
             onIndexChange={setIndex}
             initialLayout={{width: vw(100)}}

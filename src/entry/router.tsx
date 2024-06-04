@@ -5,7 +5,7 @@ import LocalMusic from '@/pages/localMusic';
 import MusicListEditor from '@/pages/musicListEditor';
 import SearchMusicList from '@/pages/searchMusicList';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {useCallback} from 'react';
+import {createRef, useCallback} from 'react';
 import AlbumDetail from '../pages/albumDetail';
 import Home from '../pages/home';
 import MusicDetail from '../pages/musicDetail';
@@ -18,6 +18,8 @@ import TopListDetail from '@/pages/topListDetail';
 import RecommendSheets from '@/pages/recommendSheets';
 import PluginSheetDetail from '@/pages/pluginSheetDetail';
 import History from '@/pages/history';
+import SetCustomTheme from '@/pages/setCustomTheme';
+import Permissions from '@/pages/permissions';
 
 LogBox.ignoreLogs([
     'Non-serializable values were found in the navigation state',
@@ -59,6 +61,10 @@ export const ROUTE_PATH = {
     PLUGIN_SHEET_DETAIL: 'plugin-sheet-detail',
     /** 历史记录 */
     HISTORY: 'history',
+    /** 自定义主题 */
+    SET_CUSTOM_THEME: 'set-custom-theme',
+    /** 权限管理 */
+    PERMISSIONS: 'permissions',
 } as const;
 
 type Valueof<T> = T[keyof T];
@@ -138,6 +144,14 @@ export const routes: Array<IRoutes> = [
         path: ROUTE_PATH.HISTORY,
         component: History,
     },
+    {
+        path: ROUTE_PATH.SET_CUSTOM_THEME,
+        component: SetCustomTheme,
+    },
+    {
+        path: ROUTE_PATH.PERMISSIONS,
+        component: Permissions,
+    },
 ];
 
 type RouterParamsBase = Record<RoutePaths, any>;
@@ -158,11 +172,13 @@ interface RouterParams extends RouterParamsBase {
     };
     setting: {
         type: string;
+        // anchor?: string | number;
     };
     local: undefined;
     downloading: undefined;
     'search-music-list': {
         musicList: IMusic.IMusicItem[] | null;
+        musicSheet?: IMusic.IMusicSheetItem;
     };
     'music-list-editor': {
         musicSheet?: Partial<IMusic.IMusicSheetItem>;
@@ -186,7 +202,7 @@ interface RouterParams extends RouterParamsBase {
         topList: IMusic.IMusicSheetItemBase;
     };
     'plugin-sheet-detail': {
-        pluginHash: string;
+        pluginHash?: string;
         sheetInfo: IMusic.IMusicSheetItemBase;
     };
 }
@@ -212,4 +228,14 @@ export function useNavigate() {
     []);
 
     return navigate;
+}
+
+export const navigationRef = createRef<any>();
+
+/** 在 react 组件外使用导航 */
+export function navigate<T extends RoutePaths>(
+    route: T,
+    params?: RouterParams[T],
+) {
+    navigationRef.current?.navigate?.(route, params);
 }

@@ -1,8 +1,6 @@
 import React from 'react';
-import {DeviceEventEmitter, StyleSheet, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
-import {Divider} from 'react-native-paper';
-import MusicQueue from '@/core/musicQueue';
 import MusicSheet from '@/core/musicSheet';
 import ListItem from '@/components/base/listItem';
 import ThemeText from '@/components/base/themeText';
@@ -10,17 +8,12 @@ import Download from '@/core/download';
 import {ImgAsset} from '@/constants/assetsConst';
 import Clipboard from '@react-native-clipboard/clipboard';
 
-import MediaMeta from '@/core/mediaMeta';
+import MediaMeta from '@/core/mediaExtra';
 import {getMediaKey} from '@/utils/mediaItem';
-import Cache from '@/core/cache';
 import FastImage from '@/components/base/fastImage';
 import Toast from '@/utils/toast';
 import LocalMusicSheet from '@/core/localMusicSheet';
-import {
-    EDeviceEvents,
-    localMusicSheetId,
-    musicHistorySheetId,
-} from '@/constants/commonConst';
+import {localMusicSheetId, musicHistorySheetId} from '@/constants/commonConst';
 import {ROUTE_PATH} from '@/entry/router';
 
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -29,6 +22,12 @@ import {FlatList} from 'react-native-gesture-handler';
 import musicHistory from '@/core/musicHistory';
 import {showDialog} from '@/components/dialogs/useDialog';
 import {hidePanel, showPanel} from '../usePanel';
+import Divider from '@/components/base/divider';
+import {iconSizeConst} from '@/constants/uiConst';
+import Config from '@/core/config';
+import TrackPlayer from '@/core/trackPlayer';
+import mediaCache from '@/core/mediaCache';
+import LyricManager from '@/core/lyricManager';
 
 interface IMusicItemOptionsProps {
     /** 歌曲信息 */
@@ -54,7 +53,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
             icon: 'id-card',
             title: `ID: ${getMediaKey(musicItem)}`,
             onPress: () => {
-                Cache.update(musicItem, []);
+                mediaCache.setMediaCache(musicItem);
                 Clipboard.setString(
                     JSON.stringify(
                         {
@@ -89,7 +88,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
             icon: 'motion-play-outline',
             title: '下一首播放',
             onPress: () => {
-                MusicQueue.addNext(musicItem);
+                TrackPlayer.addNext(musicItem);
                 hidePanel();
             },
         },
@@ -105,8 +104,12 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
             title: '下载',
             show: !downloaded,
             onPress: async () => {
-                Download.downloadMusic(musicItem);
-                hidePanel();
+                showPanel('MusicQuality', {
+                    musicItem,
+                    async onQualityPress(quality) {
+                        Download.downloadMusic(musicItem, quality);
+                    },
+                });
             },
         },
         {
@@ -156,9 +159,17 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                 ? `已关联歌词 ${associatedLrc.platform}@${associatedLrc.id}`
                 : '关联歌词',
             onPress: async () => {
-                showPanel('AssociateLrc', {
-                    musicItem,
-                });
+                if (
+                    Config.get('setting.basic.associateLyricType') === 'input'
+                ) {
+                    showPanel('AssociateLrc', {
+                        musicItem,
+                    });
+                } else {
+                    showPanel('SearchLrc', {
+                        musicItem,
+                    });
+                }
             },
         },
         {
@@ -166,10 +177,10 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
             title: '解除关联歌词',
             show: !!associatedLrc,
             onPress: async () => {
-                await MediaMeta.update(musicItem, {
+                MediaMeta.update(musicItem, {
                     associatedLrc: undefined,
                 });
-                DeviceEventEmitter.emit(EDeviceEvents.REFRESH_LYRIC);
+                LyricManager.refreshLyric(false, true);
                 Toast.success('已解除关联歌词');
                 hidePanel();
             },
@@ -186,7 +197,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
             icon: 'file-remove-outline',
             title: '清除插件缓存(播放异常时使用)',
             onPress: () => {
-                Cache.remove(musicItem);
+                mediaCache.removeMediaCache(musicItem);
                 Toast.success('缓存已清除');
             },
         },
@@ -207,7 +218,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                                 {musicItem?.title}
                             </ThemeText>
                             <ThemeText
-                                fontColor="secondary"
+                                fontColor="textSecondary"
                                 fontSize="description">
                                 {musicItem?.artist}{' '}
                                 {musicItem?.album ? `- ${musicItem.album}` : ''}
@@ -234,19 +245,16 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                             renderItem={({item}) =>
                                 item.show !== false ? (
                                     <ListItem
-                                        left={{
-                                            icon: {
-                                                name: item.icon,
-                                                size: 'small',
-                                                fontColor: 'normal',
-                                            },
-                                            width: rpx(48),
-                                        }}
-                                        itemPaddingHorizontal={12}
-                                        itemHeight={ITEM_HEIGHT}
-                                        title={item.title}
-                                        onPress={item.onPress}
-                                    />
+                                        withHorizonalPadding
+                                        heightType="small"
+                                        onPress={item.onPress}>
+                                        <ListItem.ListItemIcon
+                                            width={rpx(48)}
+                                            icon={item.icon}
+                                            iconSize={iconSizeConst.small}
+                                        />
+                                        <ListItem.Content title={item.title} />
+                                    </ListItem>
                                 ) : null
                             }
                         />

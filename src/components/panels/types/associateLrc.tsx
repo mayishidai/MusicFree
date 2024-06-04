@@ -1,21 +1,19 @@
 import React, {useState} from 'react';
-import {DeviceEventEmitter, StyleSheet, View} from 'react-native';
+import {StyleSheet} from 'react-native';
 import rpx, {vmax} from '@/utils/rpx';
-import {Divider} from 'react-native-paper';
 
 import {fontSizeConst} from '@/constants/uiConst';
-import Color from 'color';
-import Button from '@/components/base/button';
 import useColors from '@/hooks/useColors';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {errorLog} from '@/utils/log';
 import {associateLrc, parseMediaKey} from '@/utils/mediaItem';
-import Cache from '@/core/cache';
 import Toast from '@/utils/toast';
 import PanelBase from '../base/panelBase';
 import {TextInput} from 'react-native-gesture-handler';
 import {hidePanel} from '../usePanel';
-import {EDeviceEvents} from '@/constants/commonConst';
+import mediaCache from '@/core/mediaCache';
+import LyricManager from '@/core/lyricManager';
+import PanelHeader from '../base/panelHeader';
 
 interface INewMusicSheetProps {
     musicItem: IMusic.IMusicItem;
@@ -32,55 +30,49 @@ export default function AssociateLrc(props: INewMusicSheetProps) {
             height={vmax(30)}
             renderBody={() => (
                 <>
-                    <View style={style.opeartions}>
-                        <Button
-                            onPress={() => {
-                                hidePanel();
-                            }}>
-                            取消
-                        </Button>
-                        <Button
-                            onPress={async () => {
-                                const inputValue =
-                                    input ?? (await Clipboard.getString());
-                                if (inputValue) {
-                                    try {
-                                        const targetMedia = parseMediaKey(
-                                            inputValue.trim(),
+                    <PanelHeader
+                        title="关联歌词"
+                        onCancel={hidePanel}
+                        onOk={async () => {
+                            const inputValue =
+                                input ?? (await Clipboard.getString());
+                            if (inputValue) {
+                                try {
+                                    const targetMedia = parseMediaKey(
+                                        inputValue.trim(),
+                                    );
+                                    // 目标也要写进去
+                                    const targetCache =
+                                        mediaCache.getMediaCache(targetMedia);
+                                    if (!targetCache) {
+                                        Toast.warn(
+                                            '地址失效了，重新复制一下吧~',
                                         );
-                                        // 目标也要写进去
-                                        const targetCache =
-                                            Cache.get(targetMedia);
-                                        if (!targetCache) {
-                                            Toast.warn(
-                                                '地址失效了，重新复制一下吧~',
-                                            );
-                                            // TODO: ERROR CODE
-                                            throw new Error(
-                                                'CLIPBOARD TIMEOUT',
-                                            );
-                                        }
-                                        await associateLrc(musicItem, {
-                                            ...targetMedia,
-                                            ...targetCache,
-                                        });
-                                        Toast.success('关联歌词成功');
-                                        DeviceEventEmitter.emit(
-                                            EDeviceEvents.REFRESH_LYRIC,
-                                        );
-                                        hidePanel();
-                                    } catch (e: any) {
-                                        if (e.message !== 'CLIPBOARD TIMEOUT') {
-                                            Toast.warn('关联歌词失败');
-                                        }
-                                        errorLog('关联歌词失败', e?.message);
+                                        // TODO: ERROR CODE
+                                        throw new Error('CLIPBOARD TIMEOUT');
                                     }
+                                    await associateLrc(musicItem, {
+                                        ...targetMedia,
+                                        ...targetCache,
+                                    });
+                                    Toast.success('关联歌词成功');
+                                    LyricManager.refreshLyric(false, true);
+                                    hidePanel();
+                                } catch (e: any) {
+                                    if (e.message !== 'CLIPBOARD TIMEOUT') {
+                                        Toast.warn('关联歌词失败');
+                                    }
+                                    errorLog('关联歌词失败', e?.message);
                                 }
-                            }}>
-                            确认
-                        </Button>
-                    </View>
-                    <Divider />
+                            } else {
+                                associateLrc(musicItem, musicItem);
+                                LyricManager.refreshLyric(false, true);
+                                Toast.success('取消关联歌词成功');
+                                hidePanel();
+                            }
+                        }}
+                    />
+
                     <TextInput
                         value={input}
                         onChangeText={_ => {
@@ -90,9 +82,7 @@ export default function AssociateLrc(props: INewMusicSheetProps) {
                             style.input,
                             {
                                 color: colors.text,
-                                backgroundColor: Color(colors.primary)
-                                    .lighten(0.7)
-                                    .toString(),
+                                backgroundColor: colors.placeholder,
                             },
                         ]}
                         placeholderTextColor={colors.textSecondary}
@@ -106,9 +96,6 @@ export default function AssociateLrc(props: INewMusicSheetProps) {
 }
 
 const style = StyleSheet.create({
-    wrapper: {
-        width: rpx(750),
-    },
     opeartions: {
         width: rpx(750),
         paddingHorizontal: rpx(24),
@@ -118,8 +105,7 @@ const style = StyleSheet.create({
         justifyContent: 'space-between',
     },
     input: {
-        marginTop: rpx(12),
-        marginBottom: rpx(12),
+        margin: rpx(24),
         borderRadius: rpx(12),
         fontSize: fontSizeConst.content,
         lineHeight: fontSizeConst.content * 1.5,

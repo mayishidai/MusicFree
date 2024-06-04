@@ -1,18 +1,19 @@
 import React, {useState} from 'react';
-import {StyleSheet, View} from 'react-native';
+import {View} from 'react-native';
 import AlbumCover from './albumCover';
 import Lyric from './lyric';
-import {TapGestureHandler} from 'react-native-gesture-handler';
 import useOrientation from '@/hooks/useOrientation';
 import Config from '@/core/config';
+import globalStyle from '@/constants/globalStyle';
 
 export default function Content() {
     const [tab, selectTab] = useState<'album' | 'lyric'>(
         Config.get('setting.basic.musicDetailDefault') || 'album',
     );
     const orientation = useOrientation();
+    const showAlbumCover = tab === 'album' || orientation === 'horizonal';
 
-    const onPress = () => {
+    const onTurnPageClick = () => {
         if (orientation === 'horizonal') {
             return;
         }
@@ -24,23 +25,12 @@ export default function Content() {
     };
 
     return (
-        <TapGestureHandler onActivated={onPress}>
-            <View style={style.wrapper}>
-                {tab === 'album' || orientation === 'horizonal' ? (
-                    <AlbumCover />
-                ) : (
-                    <Lyric />
-                )}
-            </View>
-        </TapGestureHandler>
+        <View style={globalStyle.fwflex1}>
+            {showAlbumCover ? (
+                <AlbumCover onTurnPageClick={onTurnPageClick} />
+            ) : (
+                <Lyric onTurnPageClick={onTurnPageClick} />
+            )}
+        </View>
     );
 }
-
-const style = StyleSheet.create({
-    wrapper: {
-        width: '100%',
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-});

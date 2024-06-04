@@ -6,9 +6,8 @@ import ThemeText from '@/components/base/themeText';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import PanelBase from '../base/panelBase';
 import {ScrollView} from 'react-native-gesture-handler';
-import {Divider} from 'react-native-paper';
 import TypeTag from '@/components/base/typeTag';
-import useColors from '@/hooks/useColors';
+import PanelHeader from '../base/panelHeader';
 
 interface ISheetTagsProps {
     tags: IMusic.IMusicSheetGroupItem[];
@@ -20,19 +19,13 @@ export default function SheetTags(props: ISheetTagsProps) {
     const {tags, onTagPressed} = props ?? {};
 
     const safeAreaInsets = useSafeAreaInsets();
-    const colors = useColors();
-
-    const backgroundColor = colors.backdrop;
 
     return (
         <PanelBase
             height={vh(70)}
             renderBody={() => (
                 <>
-                    <View style={style.header}>
-                        <ThemeText fontSize="title">歌单类别</ThemeText>
-                    </View>
-                    <Divider />
+                    <PanelHeader title="歌单类别" hideButtons />
                     <ScrollView
                         style={[
                             style.body,
@@ -40,9 +33,9 @@ export default function SheetTags(props: ISheetTagsProps) {
                         ]}>
                         <View style={style.groupItem}>
                             <TypeTag
-                                backgroundColor={backgroundColor}
+                                // backgroundColor={backgroundColor}
                                 title="默认"
-                                style={style.tagItem}
+                                style={[style.tagItem]}
                                 onPress={() => {
                                     onTagPressed({
                                         title: '默认',
@@ -68,9 +61,9 @@ export default function SheetTags(props: ISheetTagsProps) {
                                     {tagGroupItem.data.map(_ => (
                                         <TypeTag
                                             key={_.id}
-                                            backgroundColor={backgroundColor}
-                                            title={_.title}
-                                            style={style.tagItem}
+                                            // backgroundColor={backgroundColor}
+                                            title={_.title || '未知'}
+                                            style={[style.tagItem]}
                                             onPress={() => {
                                                 onTagPressed(_);
                                             }}

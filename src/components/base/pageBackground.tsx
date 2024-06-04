@@ -1,13 +1,13 @@
 import React, {memo} from 'react';
 import {StyleSheet, View} from 'react-native';
-import Config from '@/core/config';
-import {useTheme} from 'react-native-paper';
-import {ImgAsset} from '@/constants/assetsConst';
 import Image from './image';
+import useColors from '@/hooks/useColors';
+import Theme from '@/core/theme';
 
 function PageBackground() {
-    const themeConfig = Config.useConfig('setting.theme');
-    const theme = useTheme();
+    const theme = Theme.useTheme();
+    const background = Theme.useBackground();
+    const colors = useColors();
 
     return (
         <>
@@ -16,22 +16,22 @@ function PageBackground() {
                     style.wrapper,
                     {
                         backgroundColor:
-                            theme.colors?.pageBackground ??
-                            theme.colors.background,
+                            colors?.pageBackground ?? colors.background,
                     },
                 ]}
             />
-            <Image
-                uri={themeConfig?.background}
-                emptySrc={ImgAsset.backgroundDefault}
-                style={[
-                    style.wrapper,
-                    {
-                        opacity: themeConfig?.backgroundOpacity ?? 0.7,
-                    },
-                ]}
-                blurRadius={themeConfig?.backgroundBlur ?? 20}
-            />
+            {!theme.id.startsWith('p-') && background?.url ? (
+                <Image
+                    uri={background.url}
+                    style={[
+                        style.wrapper,
+                        {
+                            opacity: background?.opacity ?? 0.6,
+                        },
+                    ]}
+                    blurRadius={background?.blur ?? 20}
+                />
+            ) : null}
         </>
     );
 }

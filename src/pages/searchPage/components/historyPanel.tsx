@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {ScrollView, StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
 import Loading from '@/components/base/loading';
-import {Chip} from 'react-native-paper';
+import Chip from '@/components/base/chip';
 import useSearch from '../hooks/useSearch';
 import {
     addHistory,
@@ -20,6 +20,7 @@ import {
 } from '../store/atoms';
 import ThemeText from '@/components/base/themeText';
 import Button from '@/components/base/button';
+import Empty from '@/components/base/empty';
 
 export default function () {
     const [history, setHistory] = useState<string[] | null>(null);
@@ -44,7 +45,7 @@ export default function () {
                             历史记录
                         </ThemeText>
                         <Button
-                            fontColor="secondary"
+                            fontColor="textSecondary"
                             onPress={async () => {
                                 await removeAllHistory();
                                 getHistory().then(setHistory);
@@ -55,24 +56,30 @@ export default function () {
                     <ScrollView
                         style={style.historyContent}
                         contentContainerStyle={style.historyContentConainer}>
-                        {history.map(_ => (
-                            <Chip
-                                key={`search-history-${_}`}
-                                style={style.chip}
-                                onClose={async () => {
-                                    await removeHistory(_);
-                                    getHistory().then(setHistory);
-                                }}
-                                onPress={() => {
-                                    setSearchResultsState(initSearchResults);
-                                    setPageStatus(PageStatus.SEARCHING);
-                                    search(_, 1);
-                                    addHistory(_);
-                                    setQuery(_);
-                                }}>
-                                {_}
-                            </Chip>
-                        ))}
+                        {history.length ? (
+                            history.map(_ => (
+                                <Chip
+                                    key={`search-history-${_}`}
+                                    containerStyle={style.chip}
+                                    onClose={async () => {
+                                        await removeHistory(_);
+                                        getHistory().then(setHistory);
+                                    }}
+                                    onPress={() => {
+                                        setSearchResultsState(
+                                            initSearchResults,
+                                        );
+                                        setPageStatus(PageStatus.SEARCHING);
+                                        search(_, 1);
+                                        addHistory(_);
+                                        setQuery(_);
+                                    }}>
+                                    {_}
+                                </Chip>
+                            ))
+                        ) : (
+                            <Empty />
+                        )}
                     </ScrollView>
                 </>
             )}

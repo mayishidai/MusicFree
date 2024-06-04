@@ -1,34 +1,34 @@
 import React from 'react';
 import {Text, TextProps} from 'react-native';
-import {useTheme} from 'react-native-paper';
-import {
-    ColorKey,
-    colorMap,
-    fontSizeConst,
-    fontWeightConst,
-} from '@/constants/uiConst';
+import {fontSizeConst, fontWeightConst} from '@/constants/uiConst';
+import useColors, {CustomizedColors} from '@/hooks/useColors';
 
 type IThemeTextProps = TextProps & {
-    fontColor?: ColorKey;
+    color?: string;
+    fontColor?: keyof CustomizedColors;
     fontSize?: keyof typeof fontSizeConst;
     fontWeight?: keyof typeof fontWeightConst;
+    opacity?: number;
 };
 
 export default function ThemeText(props: IThemeTextProps) {
-    const theme = useTheme();
+    const colors = useColors();
     const {
         style,
+        color,
         children,
         fontSize = 'content',
-        fontColor = 'normal',
+        fontColor = 'text',
         fontWeight = 'regular',
+        opacity,
     } = props;
 
     const themeStyle = {
-        color: theme.colors[colorMap[fontColor]],
+        color: color ?? colors[fontColor],
         fontSize: fontSizeConst[fontSize],
         fontWeight: fontWeightConst[fontWeight],
         includeFontPadding: false,
+        opacity,
     };
 
     const _style = Array.isArray(style)

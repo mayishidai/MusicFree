@@ -4,7 +4,9 @@ declare namespace IMusic {
         coverImg?: string;
         artwork?: string;
         /** 标题 */
-        title: string;
+        title?: string;
+        /** 作者 */
+        artist?: string;
         /** 歌单id */
         id: string;
         /** 描述 */

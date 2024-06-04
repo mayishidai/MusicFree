@@ -1,11 +1,11 @@
 import React, {useState} from 'react';
 import rpx from '@/utils/rpx';
-import {Dialog, TextInput} from 'react-native-paper';
-import useColors from '@/hooks/useColors';
 import {StyleSheet, View} from 'react-native';
 import ThemeText from '@/components/base/themeText';
-import Button from '@/components/base/button';
 import {hideDialog} from '../useDialog';
+import Dialog from './base';
+import Input from '@/components/base/input';
+import useColors from '@/hooks/useColors';
 interface ISubscribeItem {
     name: string;
     url: string;
@@ -27,18 +27,23 @@ export default function SubscribePluginDialog(
     const {subscribeItem, onSubmit, editingIndex, onDelete} = props;
     const [name, setName] = useState(subscribeItem?.name ?? '');
     const [url, setUrl] = useState(subscribeItem?.url ?? '');
+
     const colors = useColors();
+
+    const textColors = {
+        color: colors.text,
+        borderBottomColor: colors.textSecondary,
+    };
+
     return (
-        <Dialog
-            visible={true}
-            onDismiss={hideDialog}
-            style={{backgroundColor: colors.primary}}>
+        <Dialog onDismiss={hideDialog}>
             <Dialog.Title>订阅</Dialog.Title>
             <Dialog.Content>
                 <View style={style.headerWrapper}>
                     <ThemeText>名称: </ThemeText>
-                    <TextInput
-                        style={style.textInput}
+                    <Input
+                        hasHorizonalPadding={false}
+                        style={[style.textInput, textColors]}
                         value={name}
                         onChangeText={t => {
                             setName(t);
@@ -47,8 +52,9 @@ export default function SubscribePluginDialog(
                 </View>
                 <View style={style.headerWrapper}>
                     <ThemeText>URL: </ThemeText>
-                    <TextInput
-                        style={style.textInput}
+                    <Input
+                        hasHorizonalPadding={false}
+                        style={[style.textInput, textColors]}
                         value={url}
                         onChangeText={t => {
                             setUrl(t);
@@ -76,10 +82,21 @@ export default function SubscribePluginDialog(
                         保存
                     </Button> */}
                 </View>
-                <View style={style.options}>
-                    <Button
-                        fontColor="highlight"
-                        onPress={() => {
+            </Dialog.Content>
+            <Dialog.Actions
+                actions={[
+                    {
+                        type: 'normal',
+                        title: '删除',
+                        show: editingIndex !== undefined,
+                        onPress() {
+                            onDelete?.(editingIndex!, hideDialog);
+                        },
+                    },
+                    {
+                        type: 'primary',
+                        title: '保存',
+                        onPress() {
                             onSubmit(
                                 {
                                     name,
@@ -88,19 +105,10 @@ export default function SubscribePluginDialog(
                                 hideDialog,
                                 editingIndex,
                             );
-                        }}>
-                        保存
-                    </Button>
-                    {editingIndex !== undefined ? (
-                        <Button
-                            onPress={() => {
-                                onDelete?.(editingIndex, hideDialog);
-                            }}>
-                            删除
-                        </Button>
-                    ) : null}
-                </View>
-            </Dialog.Content>
+                        },
+                    },
+                ]}
+            />
         </Dialog>
     );
 }
@@ -109,16 +117,12 @@ const style = StyleSheet.create({
     headerWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
+        height: rpx(92),
     },
     textInput: {
         flex: 1,
         includeFontPadding: false,
-        borderBottomColor: 'white',
+        marginLeft: rpx(12),
         borderBottomWidth: 1,
-    },
-    options: {
-        marginTop: rpx(32),
-        flexDirection: 'row-reverse',
-        justifyContent: 'space-between',
     },
 });

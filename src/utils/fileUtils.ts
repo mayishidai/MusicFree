@@ -11,6 +11,7 @@ import {
     writeFile,
 } from 'react-native-fs';
 import {errorLog} from './log';
+import path from 'path-browserify';
 
 export const galleryBasePath = `${PicturesDirectoryPath}/MusicFree/`;
 
@@ -49,21 +50,21 @@ export function sizeFormatter(bytes: number | string) {
     return (bytes / Math.pow(k, i)).toFixed(1) + sizes[i];
 }
 
-export async function checkAndCreateDir(path: string) {
-    const filePath = path;
+export async function checkAndCreateDir(dirPath: string) {
+    const filePath = dirPath;
     try {
         if (!(await exists(filePath))) {
             await mkdir(filePath);
         }
     } catch (e) {
-        errorLog('无法初始化目录', {path, e});
+        errorLog('无法初始化目录', {path: dirPath, e});
     }
 }
 
-async function getFolderSize(path: string): Promise<number> {
+async function getFolderSize(dirPath: string): Promise<number> {
     let size = 0;
     try {
-        const fns = await readDir(path);
+        const fns = await readDir(dirPath);
         for (let fn of fns) {
             if (fn.isFile()) {
                 size += fn.size;
@@ -130,5 +131,52 @@ export function trimHash(url: string) {
 }
 
 export function escapeCharacter(str?: string) {
-    return str !== undefined ? `${str}`.replace(/\//g, '_') : '';
+    return str !== undefined ? `${str}`.replace(/[\/|\\?*"<>:]+/g, '_') : '';
+}
+
+export function getDirectory(dirPath: string) {
+    const lastSlash = dirPath.lastIndexOf('/');
+    if (lastSlash === -1) {
+        return dirPath;
+    }
+    return dirPath.slice(0, lastSlash);
+}
+
+export function getFileName(filePath: string, withoutExt?: boolean) {
+    const lastSlash = filePath.lastIndexOf('/');
+    if (lastSlash === -1) {
+        return filePath;
+    }
+    const fileName = filePath.slice(lastSlash);
+    if (withoutExt) {
+        const lastDot = fileName.lastIndexOf('.');
+        return lastDot === -1 ? fileName : fileName.slice(0, lastDot);
+    } else {
+        return fileName;
+    }
+}
+
+export async function mkdirR(directory: string) {
+    let folder = directory;
+    const checkStack = [];
+    while (folder.length > 15) {
+        checkStack.push(folder);
+        folder = path.dirname(folder);
+    }
+    let existPos = 0;
+    for (let i = 0; i < checkStack.length; ++i) {
+        const isExist = await exists(checkStack[i]);
+        if (isExist) {
+            existPos = i;
+            break;
+        }
+    }
+
+    for (let j = existPos - 1; j >= 0; --j) {
+        try {
+            await mkdir(checkStack[j]);
+        } catch (e) {
+            console.log('error', e);
+        }
+    }
 }

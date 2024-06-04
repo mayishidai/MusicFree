@@ -1,19 +1,17 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet} from 'react-native';
 import rpx from '@/utils/rpx';
-import SimpleAppBar from '@/components/base/simpleAppBar';
 import Config from '@/core/config';
 import {FlatList} from 'react-native-gesture-handler';
 import Empty from '@/components/base/empty';
 import ListItem from '@/components/base/listItem';
-import {FAB} from 'react-native-paper';
-import useColors from '@/hooks/useColors';
 import Toast from '@/utils/toast';
-import IconButton from '@/components/base/iconButton';
 import Clipboard from '@react-native-clipboard/clipboard';
 import HorizonalSafeAreaView from '@/components/base/horizonalSafeAreaView';
 import globalStyle from '@/constants/globalStyle';
 import {showDialog} from '@/components/dialogs/useDialog';
+import AppBar from '@/components/base/appBar';
+import Fab from '@/components/base/fab';
 
 interface ISubscribeItem {
     name: string;
@@ -25,7 +23,6 @@ const ITEM_HEIGHT = rpx(108);
 export default function PluginSubscribe() {
     const urls = Config.useConfig('setting.plugin.subscribeUrl') ?? '';
     const [subscribes, setSubscribes] = useState<Array<ISubscribeItem>>([]);
-    const colors = useColors();
 
     useEffect(() => {
         try {
@@ -81,7 +78,7 @@ export default function PluginSubscribe() {
 
     return (
         <>
-            <SimpleAppBar title="订阅设置" />
+            <AppBar>订阅设置</AppBar>
             <HorizonalSafeAreaView style={globalStyle.flex1}>
                 <FlatList
                     style={style.listWrapper}
@@ -90,6 +87,7 @@ export default function PluginSubscribe() {
                     renderItem={({item, index}) => {
                         return (
                             <ListItem
+                                withHorizonalPadding
                                 onPress={() => {
                                     showDialog('SubscribePluginDialog', {
                                         subscribeItem: item,
@@ -112,20 +110,20 @@ export default function PluginSubscribe() {
                                             Toast.success('删除成功');
                                         },
                                     });
-                                }}
-                                itemHeight={ITEM_HEIGHT}
-                                title={item.name}
-                                desc={item.url}
-                                right={() => (
-                                    <IconButton
-                                        onPress={() => {
-                                            Clipboard.setString(item.url);
-                                            Toast.success('已复制到剪切板');
-                                        }}
-                                        name="share"
-                                    />
-                                )}
-                            />
+                                }}>
+                                <ListItem.Content
+                                    title={item.name}
+                                    description={item.url}
+                                />
+                                <ListItem.ListItemIcon
+                                    icon="share"
+                                    position="right"
+                                    onPress={() => {
+                                        Clipboard.setString(item.url);
+                                        Toast.success('已复制到剪切板');
+                                    }}
+                                />
+                            </ListItem>
                         );
                     }}
                     getItemLayout={(_, index) => ({
@@ -135,14 +133,13 @@ export default function PluginSubscribe() {
                     })}
                 />
             </HorizonalSafeAreaView>
-            <FAB
-                icon={'plus'}
+            <Fab
+                icon="plus"
                 onPress={() => {
                     showDialog('SubscribePluginDialog', {
                         onSubmit,
                     });
                 }}
-                style={[{backgroundColor: colors.primary}, style.fab]}
             />
         </>
     );

@@ -1,21 +1,20 @@
 import React, {useState} from 'react';
 import {Pressable, StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
-import LinearGradient from 'react-native-linear-gradient';
-import {Divider, useTheme} from 'react-native-paper';
-import Color from 'color';
 import ThemeText from '@/components/base/themeText';
 import {ImgAsset} from '@/constants/assetsConst';
 import FastImage from '@/components/base/fastImage';
 import PlayAllBar from '@/components/base/playAllBar';
+import useColors from '@/hooks/useColors';
 
 interface IHeaderProps {
-    topListDetail: IMusic.IMusicSheetItem | null;
+    musicSheet: IMusic.IMusicSheetItem | null;
     musicList: IMusic.IMusicItem[] | null;
+    canStar?: boolean;
 }
 export default function Header(props: IHeaderProps) {
-    const {topListDetail, musicList} = props;
-    const {colors} = useTheme();
+    const {musicSheet, musicList, canStar} = props;
+    const colors = useColors();
 
     const [maxLines, setMaxLines] = useState<number | undefined>(6);
 
@@ -28,31 +27,27 @@ export default function Header(props: IHeaderProps) {
     };
 
     return (
-        <>
-            <LinearGradient
-                colors={[
-                    Color(colors.primary).alpha(0.8).toString(),
-                    Color(colors.primary).alpha(0.15).toString(),
-                ]}
-                style={style.wrapper}>
+        <View style={{backgroundColor: colors.card}}>
+            <View style={style.wrapper}>
                 <View style={style.content}>
                     <FastImage
                         style={style.coverImg}
-                        uri={topListDetail?.artwork ?? topListDetail?.coverImg}
+                        uri={musicSheet?.artwork ?? musicSheet?.coverImg}
                         emptySrc={ImgAsset.albumDefault}
                     />
                     <View style={style.details}>
-                        <ThemeText>{topListDetail?.title}</ThemeText>
-                        <ThemeText fontColor="secondary" fontSize="description">
+                        <ThemeText>{musicSheet?.title}</ThemeText>
+                        <ThemeText
+                            fontColor="textSecondary"
+                            fontSize="description">
                             共
-                            {topListDetail?.worksNum ??
+                            {musicSheet?.worksNum ??
                                 (musicList ? musicList.length ?? 0 : '-')}
                             首{' '}
                         </ThemeText>
                     </View>
                 </View>
-                <Divider style={style.divider} />
-                {topListDetail?.description ? (
+                {musicSheet?.description ? (
                     <Pressable onPress={toggleShowMore}>
                         <View
                             style={style.albumDesc}
@@ -61,20 +56,21 @@ export default function Header(props: IHeaderProps) {
                             // }}
                         >
                             <ThemeText
-                                fontColor="secondary"
+                                fontColor="textSecondary"
                                 fontSize="description"
                                 numberOfLines={maxLines}>
-                                {topListDetail.description}
+                                {musicSheet.description}
                             </ThemeText>
                         </View>
                     </Pressable>
                 ) : null}
-            </LinearGradient>
+            </View>
             <PlayAllBar
-                sheetName={topListDetail?.title}
+                canStar={canStar}
                 musicList={musicList}
+                musicSheet={musicSheet}
             />
-        </>
+        </View>
     );
 }
 
@@ -108,6 +104,6 @@ const style = StyleSheet.create({
 
     albumDesc: {
         width: '100%',
-        paddingHorizontal: rpx(24),
+        marginTop: rpx(28),
     },
 });

@@ -3,7 +3,6 @@ import {StyleSheet, Text, View} from 'react-native';
 import rpx, {vmax, vw} from '@/utils/rpx';
 
 import {fontSizeConst, fontWeightConst} from '@/constants/uiConst';
-import Color from 'color';
 import Button from '@/components/base/button';
 import useColors from '@/hooks/useColors';
 import PanelBase from '../../base/panelBase';
@@ -13,20 +12,25 @@ import PluginManager from '@/core/pluginManager';
 import {SceneMap, TabBar, TabView} from 'react-native-tab-view';
 import LyricList from './LyricList';
 import globalStyle from '@/constants/globalStyle';
+import NoPlugin from '@/components/base/noPlugin';
 
 interface INewMusicSheetProps {
-    musicItem: IMusic.IMusicItem;
+    musicItem?: IMusic.IMusicItem | null;
 }
 
 export default function SearchLrc(props: INewMusicSheetProps) {
     const {musicItem} = props;
-    const [input, setInput] = useState(musicItem.title);
+    const [input, setInput] = useState(
+        musicItem?.alias ?? musicItem?.title ?? '',
+    );
     const colors = useColors();
 
     const searchLrc = useSearchLrc();
 
     useEffect(() => {
-        searchLrc(musicItem.title, 1);
+        if (musicItem) {
+            searchLrc(musicItem.alias || musicItem.title, 1);
+        }
     }, []);
 
     return (
@@ -48,9 +52,7 @@ export default function SearchLrc(props: INewMusicSheetProps) {
                                 style.input,
                                 {
                                     color: colors.text,
-                                    backgroundColor: Color(colors.primary)
-                                        .lighten(0.7)
-                                        .toString(),
+                                    backgroundColor: colors.placeholder,
                                 },
                             ]}
                             placeholderTextColor={colors.textSecondary}
@@ -58,6 +60,7 @@ export default function SearchLrc(props: INewMusicSheetProps) {
                             maxLength={80}
                         />
                         <Button
+                            style={style.searchBtn}
                             onPress={() => {
                                 searchLrc(input, 1);
                             }}>
@@ -99,15 +102,20 @@ const style = StyleSheet.create({
         padding: rpx(12),
         flex: 1,
     },
+    searchBtn: {
+        marginLeft: rpx(12),
+    },
 });
 
 function LyricResultBodyWrapper() {
     const [index, setIndex] = useState(0);
 
-    const routes = PluginManager.getSortedSearchablePlugins('lyric').map(_ => ({
-        key: _.hash,
-        title: _.name,
-    }));
+    const routes = PluginManager.getSortedSearchablePlugins('lyric')?.map?.(
+        _ => ({
+            key: _.hash,
+            title: _.name,
+        }),
+    );
 
     const sceneMap = useRef(
         (() => {
@@ -119,8 +127,8 @@ function LyricResultBodyWrapper() {
         })(),
     );
 
-    console.log(routes);
-    return (
+    const colors = useColors();
+    return routes?.length ? (
         <TabView
             style={globalStyle.fwflex1}
             lazy
@@ -138,27 +146,36 @@ function LyricResultBodyWrapper() {
                         borderColor: 'transparent',
                     }}
                     tabStyle={{
-                        width: rpx(200),
+                        width: 'auto',
                     }}
-                    renderIndicator={() => null}
                     pressColor="transparent"
+                    inactiveColor={colors.text}
+                    activeColor={colors.primary}
                     renderLabel={({route, focused, color}) => (
                         <Text
                             numberOfLines={1}
                             style={{
+                                width: rpx(160),
                                 fontWeight: focused
                                     ? fontWeightConst.bolder
-                                    : fontWeightConst.bold,
+                                    : fontWeightConst.medium,
                                 color,
+                                textAlign: 'center',
                             }}>
                             {route.title ?? '(未命名)'}
                         </Text>
                     )}
+                    indicatorStyle={{
+                        backgroundColor: colors.primary,
+                        height: rpx(4),
+                    }}
                 />
             )}
             renderScene={sceneMap.current}
             onIndexChange={setIndex}
             initialLayout={{width: vw(100)}}
         />
+    ) : (
+        <NoPlugin notSupportType="搜索歌词" />
     );
 }

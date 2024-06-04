@@ -10,7 +10,6 @@ import {
 } from 'react-native-fs';
 import {FlatList} from 'react-native-gesture-handler';
 import useColors from '@/hooks/useColors';
-import Color from 'color';
 import IconButton from '@/components/base/iconButton';
 import FileItem from './fileItem';
 import Empty from '@/components/base/empty';
@@ -225,10 +224,11 @@ export default function FileSelector() {
     return (
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
             <StatusBar />
-            <View style={[style.header, {backgroundColor: colors.primary}]}>
+            <View style={[style.header, {backgroundColor: colors.appBar}]}>
                 <IconButton
-                    size="small"
+                    sizeType="small"
                     name="keyboard-backspace"
+                    color={colors.appBarText}
                     onPress={() => {
                         // 返回上一级
                         if (currentPath.parent !== null) {
@@ -239,6 +239,7 @@ export default function FileSelector() {
                 <ThemeText
                     numberOfLines={2}
                     ellipsizeMode="head"
+                    fontColor={'appBarText'}
                     style={style.headerPath}>
                     {currentPath.path}
                 </ThemeText>
@@ -274,15 +275,12 @@ export default function FileSelector() {
                     style={[
                         style.scanBtn,
                         {
-                            backgroundColor: Color(colors.primary)
-                                .alpha(0.8)
-                                .toString(),
+                            backgroundColor: colors.appBar,
                         },
                     ]}>
                     <ThemeText
-                        fontColor={
-                            checkedItems.length > 0 ? 'normal' : 'secondary'
-                        }>
+                        fontColor={'appBarText'}
+                        opacity={checkedItems.length > 0 ? undefined : 0.6}>
                         {actionText}
                         {multi && checkedItems?.length > 0
                             ? ` (选中${checkedItems.length})`

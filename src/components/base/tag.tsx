@@ -1,29 +1,31 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {StyleProp, StyleSheet, TextStyle, View, ViewStyle} from 'react-native';
 import rpx from '@/utils/rpx';
 import ThemeText from './themeText';
-import {useTheme} from 'react-native-paper';
-import Color from 'color';
+import useColors from '@/hooks/useColors';
 
 interface ITagProps {
     tagName: string;
+    containerStyle?: StyleProp<ViewStyle>;
+    style?: StyleProp<TextStyle>;
 }
 export default function Tag(props: ITagProps) {
-    const {colors} = useTheme();
+    const colors = useColors();
     return (
         <View
             style={[
-                style.tag,
-                {backgroundColor: Color(colors.text).negate().toString()},
+                styles.tag,
+                {backgroundColor: colors.card, borderColor: colors.divider},
+                props.containerStyle,
             ]}>
-            <ThemeText style={style.tagText} fontSize="tag">
+            <ThemeText style={[styles.tagText, props.style]} fontSize="tag">
                 {props.tagName}
             </ThemeText>
         </View>
     );
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
     tag: {
         height: rpx(32),
         marginLeft: rpx(12),
@@ -32,6 +34,8 @@ const style = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         flexShrink: 0,
+        borderWidth: 1,
+        borderStyle: 'solid',
     },
     tagText: {
         textAlignVertical: 'center',

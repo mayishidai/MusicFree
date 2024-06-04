@@ -1,16 +1,14 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {InteractionManager, StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
 import ThemeText from '@/components/base/themeText';
 import repeatModeConst from '@/constants/repeatModeConst';
-import MusicQueue from '@/core/musicQueue';
-import useTextColor from '@/hooks/useTextColor';
-import {Button} from 'react-native-paper';
+import IconTextButton from '@/components/base/iconTextButton';
+import TrackPlayer from '@/core/trackPlayer';
 
 export default function Header() {
-    const repeatMode = MusicQueue.useRepeatMode();
-    const musicQueue = MusicQueue.useMusicQueue();
-    const textColor = useTextColor();
+    const repeatMode = TrackPlayer.useRepeatMode();
+    const playList = TrackPlayer.usePlayList();
 
     return (
         <View style={style.wrapper}>
@@ -19,27 +17,27 @@ export default function Header() {
                 fontSize="title"
                 fontWeight="bold">
                 播放列表
-                <ThemeText fontColor="secondary">
+                <ThemeText fontColor="textSecondary">
                     {' '}
-                    ({musicQueue.length}首)
+                    ({playList.length}首)
                 </ThemeText>
             </ThemeText>
-            <Button
-                color={textColor}
+            <IconTextButton
                 onPress={() => {
-                    MusicQueue.toggleRepeatMode();
+                    InteractionManager.runAfterInteractions(() => {
+                        TrackPlayer.toggleRepeatMode();
+                    });
                 }}
                 icon={repeatModeConst[repeatMode].icon}>
                 {repeatModeConst[repeatMode].text}
-            </Button>
-            <Button
-                color={textColor}
+            </IconTextButton>
+            <IconTextButton
+                icon="trash-can-outline"
                 onPress={() => {
-                    MusicQueue.clear();
-                }}
-                icon={'trash-can-outline'}>
+                    TrackPlayer.clear();
+                }}>
                 清空
-            </Button>
+            </IconTextButton>
         </View>
     );
 }
@@ -49,7 +47,8 @@ const style = StyleSheet.create({
         width: rpx(750),
         height: rpx(80),
         paddingHorizontal: rpx(24),
-        marginTop: rpx(24),
+        marginTop: rpx(18),
+        marginBottom: rpx(12),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

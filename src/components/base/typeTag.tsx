@@ -18,7 +18,7 @@ export default function TypeTag(props: ITypeTagProps) {
         title,
         onPress,
         selected = false,
-        backgroundColor,
+        // backgroundColor,
         style: _style,
     } = props;
     const colors = useColors();
@@ -28,13 +28,14 @@ export default function TypeTag(props: ITypeTagProps) {
                 style={[
                     style.wrapper,
                     {
-                        backgroundColor: backgroundColor ?? colors.primary,
+                        backgroundColor: colors.card,
+                        borderColor: colors.divider,
                     },
                     _style,
                 ]}>
                 <ThemeText
                     fontSize="subTitle"
-                    fontColor={selected ? 'highlight' : 'normal'}>
+                    fontColor={selected ? 'primary' : 'text'}>
                     {title}
                 </ThemeText>
             </View>
@@ -47,7 +48,9 @@ const style = StyleSheet.create({
         flexGrow: 0,
         paddingHorizontal: rpx(18),
         paddingVertical: rpx(12),
-        borderRadius: rpx(26),
+        borderRadius: rpx(36),
         marginHorizontal: rpx(16),
+        borderWidth: 1,
+        borderStyle: 'solid',
     },
 });

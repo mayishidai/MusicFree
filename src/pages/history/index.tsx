@@ -1,32 +1,49 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-import rpx from '@/utils/rpx';
 import VerticalSafeAreaView from '@/components/base/verticalSafeAreaView';
 import globalStyle from '@/constants/globalStyle';
-import SimpleAppBar from '@/components/base/simpleAppBar';
 import StatusBar from '@/components/base/statusBar';
 import musicHistory from '@/core/musicHistory';
 import MusicList from '@/components/musicList';
 import {musicHistorySheetId} from '@/constants/commonConst';
 import MusicBar from '@/components/musicBar';
-import Button from '@/components/base/button';
+import AppBar from '@/components/base/appBar';
+import {ROUTE_PATH, useNavigate} from '@/entry/router';
 
 export default function History() {
     const musicHistoryList = musicHistory.useMusicHistory();
+
+    const navigate = useNavigate();
+
     return (
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
             <StatusBar />
-            <SimpleAppBar title="播放记录" />
-            <View style={style.opeartions}>
-                <Button
-                    onPress={() => {
-                        if (musicHistoryList.length) {
-                            musicHistory.clearMusic();
-                        }
-                    }}>
-                    清空
-                </Button>
-            </View>
+            <AppBar
+                menu={[
+                    {
+                        icon: 'trash-can-outline',
+                        title: '清空播放记录',
+                        onPress() {
+                            if (musicHistoryList.length) {
+                                musicHistory.clearMusic();
+                            }
+                        },
+                    },
+                    {
+                        icon: 'playlist-edit',
+                        title: '编辑',
+                        onPress() {
+                            navigate(ROUTE_PATH.MUSIC_LIST_EDITOR, {
+                                musicList: musicHistoryList,
+                                musicSheet: {
+                                    id: musicHistorySheetId,
+                                    title: '播放记录',
+                                },
+                            });
+                        },
+                    },
+                ]}>
+                播放记录
+            </AppBar>
             <MusicList
                 musicList={musicHistoryList}
                 showIndex
@@ -40,13 +57,3 @@ export default function History() {
         </VerticalSafeAreaView>
     );
 }
-
-const style = StyleSheet.create({
-    opeartions: {
-        height: rpx(88),
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '100%',
-        paddingHorizontal: rpx(24),
-    },
-});

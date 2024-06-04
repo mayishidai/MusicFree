@@ -6,18 +6,25 @@ interface IStatusBarProps extends StatusBarProps {}
 
 export default function (props: IStatusBarProps) {
     const colors = useColors();
-    const {backgroundColor} = props;
+    const {backgroundColor, barStyle} = props;
 
     return (
-        <View
-            style={{
-                zIndex: 10000,
-                position: 'absolute',
-                top: 0,
-                backgroundColor: backgroundColor ?? colors.primary,
-                width: '100%',
-                height: StatusBar.currentHeight,
-            }}
-        />
+        <>
+            <StatusBar
+                backgroundColor={'rgba(0,0,0,0)'}
+                barStyle={barStyle ?? 'light-content'}
+            />
+            <View
+                style={{
+                    zIndex: 10000,
+                    position: 'absolute',
+                    top: 0,
+                    backgroundColor:
+                        backgroundColor ?? colors.appBar ?? colors.primary,
+                    width: '100%',
+                    height: StatusBar.currentHeight,
+                }}
+            />
+        </>
     );
 }

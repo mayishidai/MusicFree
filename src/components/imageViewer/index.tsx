@@ -48,9 +48,9 @@ export function ImageViewComponent() {
                     style={
                         orientation === 'vertical'
                             ? {
-                                  width: vw(80),
-                                  minHeight: vw(80),
-                                  maxHeight: vh(80),
+                                  width: vw(100),
+                                  minHeight: vw(100),
+                                  maxHeight: vh(100),
                                   resizeMode: 'contain',
                               }
                             : {
@@ -83,7 +83,9 @@ export function ImageViewComponent() {
                         }
                     }}>
                     <View style={style.button}>
-                        <ThemeText>点击保存</ThemeText>
+                        <ThemeText color="white" fontSize="title">
+                            点击保存
+                        </ThemeText>
                     </View>
                 </TouchableOpacity>
             </View>
@@ -114,13 +116,15 @@ const style = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        backgroundColor: 'rgba(0,0,0,0.8)',
     },
     button: {
-        marginTop: rpx(36),
+        marginTop: rpx(48),
         paddingHorizontal: rpx(18),
-        paddingVertical: rpx(12),
-        borderRadius: rpx(8),
-        backgroundColor: '#20232a ',
+        paddingVertical: rpx(16),
+        borderRadius: rpx(12),
+        borderWidth: 1,
+        borderStyle: 'solid',
+        borderColor: 'rgba(255,255,255,0.1)',
     },
 });

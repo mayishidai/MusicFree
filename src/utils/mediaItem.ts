@@ -1,8 +1,10 @@
 import {
     internalSerializeKey,
     localPluginPlatform,
+    sortIndexSymbol,
+    timeStampSymbol,
 } from '@/constants/commonConst';
-import MediaMeta from '@/core/mediaMeta';
+import MediaMeta from '@/core/mediaExtra';
 import produce from 'immer';
 import objectPath from 'object-path';
 
@@ -138,11 +140,22 @@ export async function associateLrc(
     if (!musicItem || !linkto) {
         throw new Error('');
     }
-    await MediaMeta.update(musicItem, {
-        associatedLrc: linkto,
+
+    // 如果相同直接断链
+    MediaMeta.update(musicItem, {
+        associatedLrc: isSameMediaItem(musicItem, linkto) ? undefined : linkto,
     });
-    await MediaMeta.update(linkto, [
-        ['lrc', linkto.lrc],
-        ['$.local.localLrc', linkto.$?.local?.localLrc],
-    ]);
+}
+
+export function sortByTimestampAndIndex(array: any[], newArray = false) {
+    if (newArray) {
+        array = [...array];
+    }
+    return array.sort((a, b) => {
+        const ts = a[timeStampSymbol] - b[timeStampSymbol];
+        if (ts !== 0) {
+            return ts;
+        }
+        return a[sortIndexSymbol] - b[sortIndexSymbol];
+    });
 }

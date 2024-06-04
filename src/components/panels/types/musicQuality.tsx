@@ -1,7 +1,6 @@
 import React, {Fragment} from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import {Pressable, StyleSheet} from 'react-native';
 import rpx from '@/utils/rpx';
-import {Divider} from 'react-native-paper';
 import ThemeText from '@/components/base/themeText';
 
 import {qualityKeys, qualityText} from '@/utils/qualities';
@@ -10,6 +9,8 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import PanelBase from '../base/panelBase';
 import {ScrollView} from 'react-native-gesture-handler';
 import {hidePanel} from '../usePanel';
+import Divider from '@/components/base/divider';
+import PanelHeader from '../base/panelHeader';
 
 interface IMusicQualityProps {
     /** 歌曲信息 */
@@ -31,11 +32,9 @@ export default function MusicQuality(props: IMusicQualityProps) {
             height={rpx(520)}
             renderBody={() => (
                 <>
-                    <View style={style.header}>
-                        <ThemeText fontWeight="bold" fontSize="title">
-                            音质选择
-                        </ThemeText>
-                    </View>
+                    <PanelHeader title="设置播放音质" hideButtons />
+                    <Divider />
+
                     <ScrollView
                         style={[
                             style.body,
@@ -46,7 +45,6 @@ export default function MusicQuality(props: IMusicQualityProps) {
                         {qualityKeys.map(key => {
                             return (
                                 <Fragment key={`frag-${key}`}>
-                                    <Divider key={`di-${key}`} />
                                     <Pressable
                                         key={`btn-${key}`}
                                         style={style.item}
@@ -67,7 +65,6 @@ export default function MusicQuality(props: IMusicQualityProps) {
                                 </Fragment>
                             );
                         })}
-                        <Divider />
                     </ScrollView>
                 </>
             )}

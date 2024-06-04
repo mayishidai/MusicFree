@@ -4,17 +4,18 @@ import rpx from '@/utils/rpx';
 import MusicItem from '@/components/mediaItem/musicItem';
 import produce from 'immer';
 import {useAtom, useSetAtom} from 'jotai';
-import {Checkbox} from 'react-native-paper';
 import {
     editingMusicListAtom,
     IEditorMusicItem,
     musicListChangedAtom,
 } from '../store/atom';
 import SortableFlatList from '@/components/base/SortableFlatList';
-import globalStyle from '@/constants/globalStyle';
+
+import CheckBox from '@/components/base/checkbox';
+import useColors from '@/hooks/useColors';
+import Empty from '@/components/base/empty';
 
 const ITEM_HEIGHT = rpx(120);
-const ITEM_WIDTH = '100%';
 
 interface IMusicEditorItemProps {
     index: number;
@@ -34,23 +35,13 @@ function _MusicEditorItem(props: IMusicEditorItemProps) {
 
     return (
         <MusicItem
-            itemWidth={ITEM_WIDTH}
             musicItem={editorMusicItem.musicItem}
-            left={{
-                component: () => (
-                    <View style={style.checkBox}>
-                        <Checkbox
-                            onPress={onPress}
-                            status={
-                                editorMusicItem.checked
-                                    ? 'checked'
-                                    : 'unchecked'
-                            }
-                        />
-                    </View>
-                ),
-            }}
-            right={() => <></>}
+            left={() => (
+                <View style={style.checkBox}>
+                    <CheckBox checked={editorMusicItem.checked} />
+                </View>
+            )}
+            showMoreIcon={false}
             itemPaddingRight={rpx(100)}
             onItemPress={onPress}
         />
@@ -77,10 +68,11 @@ export default function MusicList() {
         },
         [editingMusicList],
     );
+    const colors = useColors();
 
     return editingMusicList?.length ? (
         <SortableFlatList
-            activeBackgroundColor="rgba(33,33,33,0.8)"
+            activeBackgroundColor={colors.placeholder}
             marginTop={marginTop}
             data={editingMusicList}
             renderItem={renderItem}
@@ -91,7 +83,7 @@ export default function MusicList() {
             }}
         />
     ) : (
-        <View style={globalStyle.fwflex1} />
+        <Empty />
     );
 }
 
@@ -99,5 +91,6 @@ const style = StyleSheet.create({
     checkBox: {
         height: '100%',
         justifyContent: 'center',
+        marginRight: rpx(16),
     },
 });

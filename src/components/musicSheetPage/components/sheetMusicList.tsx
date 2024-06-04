@@ -5,18 +5,20 @@ import Loading from '@/components/base/loading';
 import Header from './header';
 import MusicList from '@/components/musicList';
 import Config from '@/core/config';
-import MusicQueue from '@/core/musicQueue';
 import globalStyle from '@/constants/globalStyle';
 import HorizonalSafeAreaView from '@/components/base/horizonalSafeAreaView';
+import TrackPlayer from '@/core/trackPlayer';
 
 interface IMusicListProps {
     sheetInfo: IMusic.IMusicSheetItem | null;
     musicList?: IMusic.IMusicItem[] | null;
     onEndReached?: () => void;
     loadMore?: 'loading' | 'done' | 'idle';
+    // 是否可收藏
+    canStar?: boolean;
 }
 export default function SheetMusicList(props: IMusicListProps) {
-    const {sheetInfo: topListDetail, musicList, onEndReached, loadMore} = props;
+    const {sheetInfo, musicList, onEndReached, loadMore, canStar} = props;
 
     return (
         <View style={globalStyle.fwflex1}>
@@ -29,7 +31,8 @@ export default function SheetMusicList(props: IMusicListProps) {
                         loadMore={loadMore}
                         Header={
                             <Header
-                                topListDetail={topListDetail}
+                                canStar={canStar}
+                                musicSheet={sheetInfo}
                                 musicList={musicList}
                             />
                         }
@@ -40,9 +43,9 @@ export default function SheetMusicList(props: IMusicListProps) {
                                     'setting.basic.clickMusicInAlbum',
                                 ) === '播放单曲'
                             ) {
-                                MusicQueue.play(musicItem);
+                                TrackPlayer.play(musicItem);
                             } else {
-                                MusicQueue.playWithReplaceQueue(
+                                TrackPlayer.playWithReplacePlayList(
                                     musicItem,
                                     musicList ?? [musicItem],
                                 );

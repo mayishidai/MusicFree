@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useState} from 'react';
+import React, {memo, useCallback, useEffect, useState} from 'react';
 import {useAtomValue} from 'jotai';
 import {ISearchResult, queryAtom} from '../../store/atoms';
 import {renderMap} from './results';
@@ -11,6 +11,7 @@ import ListReachEnd from '@/components/base/listReachEnd';
 import useOrientation from '@/hooks/useOrientation';
 import {FlashList} from '@shopify/flash-list';
 import rpx from '@/utils/rpx';
+import {StyleSheet, View} from 'react-native';
 
 interface IResultWrapperProps<
     T extends ICommon.SupportMediaType = ICommon.SupportMediaType,
@@ -33,6 +34,11 @@ function ResultWrapper(props: IResultWrapperProps) {
     const ResultComponent = renderMap[tab]!;
     const data: any = searchResult?.data ?? [];
 
+    const keyExtractor = useCallback(
+        (item: any, i: number) => `${i}-${item.platform}-${item.id}`,
+        [],
+    );
+
     useEffect(() => {
         if (searchState === RequestStateCode.IDLE) {
             search(query, 1, tab, pluginHash);
@@ -52,21 +58,23 @@ function ResultWrapper(props: IResultWrapperProps) {
         />
     );
 
-    return searchState === RequestStateCode.PENDING_FP ? (
+    return searchState === RequestStateCode.PENDING_FIRST_PAGE ? (
         <Loading />
     ) : (
         <FlashList
             extraData={searchState}
             ListEmptyComponent={() => <Empty />}
-            ListFooterComponent={() =>
-                searchState === RequestStateCode.PENDING ? (
-                    <ListLoading />
-                ) : searchState === RequestStateCode.FINISHED ? (
-                    <ListReachEnd />
-                ) : (
-                    <></>
-                )
-            }
+            ListFooterComponent={() => (
+                <View style={style.wrapper}>
+                    {searchState === RequestStateCode.PENDING_REST_PAGE ? (
+                        <ListLoading />
+                    ) : searchState === RequestStateCode.FINISHED ? (
+                        <ListReachEnd />
+                    ) : (
+                        <></>
+                    )}
+                </View>
+            )}
             data={data}
             refreshing={false}
             onRefresh={() => {
@@ -82,8 +90,17 @@ function ResultWrapper(props: IResultWrapperProps) {
                 tab === 'sheet' ? (orientation === 'vertical' ? 3 : 4) : 1
             }
             renderItem={renderItem}
+            keyExtractor={keyExtractor}
         />
     );
 }
 
 export default memo(ResultWrapper);
+const style = StyleSheet.create({
+    wrapper: {
+        width: '100%',
+        height: rpx(140),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});

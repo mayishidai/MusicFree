@@ -9,6 +9,8 @@ import {fontWeightConst} from '@/constants/uiConst';
 import {useAtomValue} from 'jotai';
 import {searchResultsAtom} from '../../store/atoms';
 import PluginManager from '@/core/pluginManager';
+import useColors from '@/hooks/useColors';
+import Empty from '@/components/base/empty';
 
 interface IResultSubPanelProps {
     tab: ICommon.SupportMediaType;
@@ -61,6 +63,7 @@ function getSubRouterScene(
 
 function ResultSubPanel(props: IResultSubPanelProps) {
     const [index, setIndex] = useState(0);
+    const colors = useColors();
 
     const routes = PluginManager.getSortedSearchablePlugins(props.tab).map(
         _ => ({
@@ -72,6 +75,10 @@ function ResultSubPanel(props: IResultSubPanelProps) {
         () => getSubRouterScene(props.tab, routes),
         [props.tab],
     );
+
+    if (!routes.length) {
+        return <Empty />;
+    }
 
     return (
         <TabView
@@ -89,8 +96,10 @@ function ResultSubPanel(props: IResultSubPanelProps) {
                         shadowColor: 'transparent',
                         borderColor: 'transparent',
                     }}
+                    inactiveColor={colors.text}
+                    activeColor={colors.primary}
                     tabStyle={{
-                        width: rpx(200),
+                        width: 'auto',
                     }}
                     renderIndicator={() => null}
                     pressColor="transparent"
@@ -98,10 +107,12 @@ function ResultSubPanel(props: IResultSubPanelProps) {
                         <Text
                             numberOfLines={1}
                             style={{
+                                width: rpx(140),
                                 fontWeight: focused
                                     ? fontWeightConst.bolder
-                                    : fontWeightConst.bold,
+                                    : fontWeightConst.medium,
                                 color,
+                                textAlign: 'center',
                             }}>
                             {route.title ?? '(未命名)'}
                         </Text>

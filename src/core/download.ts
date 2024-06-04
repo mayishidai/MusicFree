@@ -3,7 +3,7 @@ import {
     supportLocalMediaType,
 } from '@/constants/commonConst';
 import pathConst from '@/constants/pathConst';
-import {addFileScheme, escapeCharacter} from '@/utils/fileUtils';
+import {addFileScheme, escapeCharacter, mkdirR} from '@/utils/fileUtils';
 import {errorLog} from '@/utils/log';
 import {isSameMediaItem} from '@/utils/mediaItem';
 import {getQualityOrder} from '@/utils/qualities';
@@ -11,14 +11,20 @@ import StateMapper from '@/utils/stateMapper';
 import Toast from '@/utils/toast';
 import produce from 'immer';
 import {InteractionManager} from 'react-native';
-import {downloadFile} from 'react-native-fs';
+import {downloadFile, exists} from 'react-native-fs';
 
 import Config from './config';
 import LocalMusicSheet from './localMusicSheet';
-import MediaMeta from './mediaMeta';
+import MediaMeta from './mediaExtra';
 import Network from './network';
 import PluginManager from './pluginManager';
 import {PERMISSIONS, check} from 'react-native-permissions';
+import path from 'path-browserify';
+import {
+    getCurrentDialog,
+    hideDialog,
+    showDialog,
+} from '@/components/dialogs/useDialog';
 // import PQueue from 'p-queue/dist';
 // import PriorityQueue from 'p-queue/dist/priority-queue';
 
@@ -258,6 +264,13 @@ async function downloadNext() {
         },
     });
     nextDownloadItem = {...nextDownloadItem, jobId};
+
+    let folder = path.dirname(targetDownloadPath);
+    let folderExists = await exists(folder);
+
+    if (!folderExists) {
+        await mkdirR(folder);
+    }
     try {
         await promise;
         /** 下载完成 */
@@ -267,14 +280,9 @@ async function downloadNext() {
                 localPath: targetDownloadPath,
             },
         });
-        MediaMeta.update({
-            ...musicItem,
-            [internalSerializeKey]: {
-                downloaded: true,
-                local: {
-                    localUrl: targetDownloadPath,
-                },
-            },
+        MediaMeta.update(musicItem, {
+            downloaded: true,
+            localPath: targetDownloadPath,
         });
         // const primaryKey = plugin?.instance.primaryKey ?? [];
         // if (!primaryKey.includes('id')) {
@@ -305,6 +313,7 @@ async function downloadNext() {
                 quality: nextDownloadItem.quality,
             },
             reason: e?.message ?? e,
+            targetDownloadPath: targetDownloadPath,
         });
         hasError = true;
     }
@@ -324,14 +333,19 @@ async function downloadNext() {
                     PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
                 );
                 if (perm !== 'granted') {
-                    Toast.success('权限不足，请检查是否授予写入文件的权限');
+                    Toast.warn('权限不足，请检查是否授予写入文件的权限');
                 } else {
                     throw new Error();
                 }
             } catch {
-                Toast.success(
-                    '部分下载失败，如果重复出现此现象请打开“侧边栏-记录错误日志”辅助排查',
-                );
+                if (getCurrentDialog()?.name !== 'SimpleDialog') {
+                    showDialog('SimpleDialog', {
+                        title: '下载失败',
+                        content:
+                            '部分歌曲下载失败，如果无法下载请检查系统设置中是否授予完整文件读写权限；或者去【侧边栏-权限管理】中查看文件读写权限是否勾选',
+                        onOk: hideDialog,
+                    });
+                }
             }
         } else {
             Toast.success('下载完成');
@@ -359,9 +373,14 @@ function downloadMusic(
     }
     if (
         Network.isCellular() &&
-        !Config.get('setting.basic.useCelluarNetworkDownload')
+        !Config.get('setting.basic.useCelluarNetworkDownload') &&
+        getCurrentDialog()?.name !== 'SimpleDialog'
     ) {
-        Toast.warn('当前设置移动网络不可下载，可在侧边栏基本设置修改');
+        showDialog('SimpleDialog', {
+            title: '流量提醒',
+            content:
+                '当前非WIFI环境，侧边栏设置中打开【使用移动网络下载】功能后可继续下载',
+        });
         return;
     }
     // 如果已经在下载中

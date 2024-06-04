@@ -1,23 +1,26 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import rpx from '@/utils/rpx';
-import {ActivityIndicator, useTheme} from 'react-native-paper';
+import {ActivityIndicator} from 'react-native';
 import ThemeText from './themeText';
+import useColors from '@/hooks/useColors';
 
 interface ILoadingProps {
     text?: string;
     showText?: boolean;
     height?: number;
+    color?: string;
 }
 export default function Loading(props: ILoadingProps) {
-    const {colors} = useTheme();
-    const {showText = true, height, text} = props;
+    const colors = useColors();
+    const {showText = true, height, text, color} = props;
 
     return (
         <View style={[style.wrapper, {height}]}>
-            <ActivityIndicator animating color={colors.text} />
+            <ActivityIndicator animating color={color ?? colors.text} />
             {showText ? (
                 <ThemeText
+                    color={color}
                     fontSize="title"
                     fontWeight="semibold"
                     style={style.text}>

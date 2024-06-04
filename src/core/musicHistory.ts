@@ -1,10 +1,15 @@
 import {isSameMediaItem} from '@/utils/mediaItem';
 import {GlobalState} from '@/utils/stateMapper';
-import {setStorage} from '@/utils/storage';
+import {getStorage, setStorage} from '@/utils/storage';
 import Config from './config';
 import {musicHistorySheetId} from '@/constants/commonConst';
 
 const musicHistory = new GlobalState<IMusic.IMusicItem[]>([]);
+
+async function setupMusicHistory() {
+    const history = await getStorage(musicHistorySheetId);
+    musicHistory.setValue(history ?? []);
+}
 
 async function addMusic(musicItem: IMusic.IMusicItem) {
     const newMusicHistory = [
@@ -30,9 +35,16 @@ async function clearMusic() {
     musicHistory.setValue([]);
 }
 
+async function setHistory(newHistory: IMusic.IMusicItem[]) {
+    await setStorage(musicHistorySheetId, newHistory);
+    musicHistory.setValue(newHistory);
+}
+
 export default {
+    setupMusicHistory,
     addMusic,
     removeMusic,
     clearMusic,
+    setHistory,
     useMusicHistory: musicHistory.useValue,
 };

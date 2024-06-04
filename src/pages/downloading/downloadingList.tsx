@@ -21,23 +21,29 @@ export default function DownloadingList() {
                     if (index < downloading.length) {
                         const prog = progress[item.filename];
                         return (
-                            <ListItem
-                                title={item.musicItem.title}
-                                desc={`${
-                                    prog?.progress
-                                        ? sizeFormatter(prog.progress)
-                                        : '-'
-                                } / ${
-                                    prog?.size ? sizeFormatter(prog.size) : '-'
-                                }`}
-                            />
+                            <ListItem withHorizonalPadding>
+                                <ListItem.Content
+                                    title={item.musicItem.title}
+                                    description={`${
+                                        prog?.progress
+                                            ? sizeFormatter(prog.progress)
+                                            : '-'
+                                    } / ${
+                                        prog?.size
+                                            ? sizeFormatter(prog.size)
+                                            : '-'
+                                    }`}
+                                />
+                            </ListItem>
                         );
                     } else {
                         return (
-                            <ListItem
-                                title={item.musicItem.title}
-                                desc="等待下载"
-                            />
+                            <ListItem withHorizonalPadding>
+                                <ListItem.Content
+                                    title={item.musicItem.title}
+                                    description="等待下载"
+                                />
+                            </ListItem>
                         );
                     }
                 }}

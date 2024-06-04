@@ -4,9 +4,9 @@ import rpx from '@/utils/rpx';
 import PluginManager from '@/core/pluginManager';
 import {TabBar, TabView} from 'react-native-tab-view';
 import {fontWeightConst} from '@/constants/uiConst';
-import Color from 'color';
-import {useTheme} from 'react-native-paper';
 import BoardPanelWrapper from './boardPanelWrapper';
+import useColors from '@/hooks/useColors';
+import NoPlugin from '@/components/base/noPlugin';
 
 export default function TopListBody() {
     const routes = PluginManager.getSortedTopListsablePlugins().map(_ => ({
@@ -14,7 +14,7 @@ export default function TopListBody() {
         title: _.name,
     }));
     const [index, setIndex] = useState(0);
-    const {colors} = useTheme();
+    const colors = useColors();
 
     const renderScene = useCallback(
         (props: {route: {key: string}}) => (
@@ -22,6 +22,9 @@ export default function TopListBody() {
         ),
         [],
     );
+    if (!routes?.length) {
+        return <NoPlugin notSupportType="榜单" />;
+    }
 
     return (
         <TabView
@@ -34,36 +37,36 @@ export default function TopListBody() {
                 <TabBar
                     {...props}
                     style={{
-                        backgroundColor: Color(colors.primary)
-                            .alpha(0.7)
-                            .toString(),
+                        backgroundColor: 'transparent',
                         shadowColor: 'transparent',
                         borderColor: 'transparent',
                     }}
                     tabStyle={{
-                        width: rpx(200),
+                        width: 'auto',
                     }}
                     scrollEnabled
+                    inactiveColor={colors.text}
+                    activeColor={colors.primary}
                     renderLabel={({route, focused, color}) => (
                         <Text
+                            numberOfLines={1}
                             style={{
+                                width: rpx(160),
                                 fontWeight: focused
                                     ? fontWeightConst.bolder
-                                    : fontWeightConst.bold,
+                                    : fontWeightConst.medium,
                                 color,
+                                textAlign: 'center',
                             }}>
                             {route.title}
                         </Text>
                     )}
                     indicatorStyle={{
-                        backgroundColor: colors.text,
+                        backgroundColor: colors.primary,
                         height: rpx(4),
                     }}
                 />
             )}
-            style={{
-                backgroundColor: colors.background,
-            }}
             renderScene={renderScene}
             onIndexChange={setIndex}
             initialLayout={{width: rpx(750)}}

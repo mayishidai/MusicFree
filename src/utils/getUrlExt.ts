@@ -1,14 +1,19 @@
-import {URL} from 'react-native-url-polyfill';
+import path from 'path-browserify';
 
 export default function getUrlExt(url?: string) {
     if (!url) {
         return;
     }
-    const urlObj = new URL(url);
-    const filePath = urlObj.pathname;
+    const ext = path.extname(url);
 
-    return (
-        filePath.substring(filePath.lastIndexOf('.'), filePath.length) ||
-        filePath
-    );
+    const extraTag = ext.indexOf('?');
+
+    if (ext) {
+        if (extraTag !== -1) {
+            return ext.slice(0, extraTag);
+        } else {
+            return ext;
+        }
+    }
+    return url;
 }

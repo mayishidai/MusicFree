@@ -1,46 +1,52 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import rpx from '@/utils/rpx';
-import {IconButton} from 'react-native-paper';
-import MusicQueue from '@/core/musicQueue';
 import {useNavigation} from '@react-navigation/native';
 import Tag from '@/components/base/tag';
 import {fontSizeConst, fontWeightConst} from '@/constants/uiConst';
 import Share from 'react-native-share';
 import {B64Asset} from '@/constants/assetsConst';
+import IconButton from '@/components/base/iconButton';
+import TrackPlayer from '@/core/trackPlayer';
 
 export default function NavBar() {
     const navigation = useNavigation();
-    const musicItem = MusicQueue.useCurrentMusicItem();
+    const musicItem = TrackPlayer.useCurrentMusic();
     // const {showShare} = useShare();
 
     return (
-        <View style={style.wrapper}>
+        <View style={styles.container}>
             <IconButton
-                icon="arrow-left"
-                size={rpx(48)}
+                name="arrow-left"
+                sizeType={'normal'}
                 color="white"
+                style={styles.button}
                 onPress={() => {
                     navigation.goBack();
                 }}
             />
-            <View style={style.headerContent}>
-                <Text numberOfLines={1} style={style.headerTitleText}>
+            <View style={styles.headerContent}>
+                <Text numberOfLines={1} style={styles.headerTitleText}>
                     {musicItem?.title ?? '无音乐'}
                 </Text>
-                <View style={style.headerDesc}>
-                    <Text style={style.headerArtistText} numberOfLines={1}>
+                <View style={styles.headerDesc}>
+                    <Text style={styles.headerArtistText} numberOfLines={1}>
                         {musicItem?.artist}
                     </Text>
                     {musicItem?.platform ? (
-                        <Tag tagName={musicItem.platform} />
+                        <Tag
+                            tagName={musicItem.platform}
+                            containerStyle={styles.tagBg}
+                            style={styles.tagText}
+                        />
                     ) : null}
                 </View>
             </View>
             <IconButton
-                icon="share"
+                name="share"
                 color="white"
-                size={rpx(48)}
+                sizeType={'normal'}
+                style={styles.button}
                 onPress={async () => {
                     try {
                         await Share.open({
@@ -57,13 +63,16 @@ export default function NavBar() {
     );
 }
 
-const style = StyleSheet.create({
-    wrapper: {
+const styles = StyleSheet.create({
+    container: {
         width: '100%',
         height: rpx(150),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+    },
+    button: {
+        marginHorizontal: rpx(24),
     },
     headerContent: {
         flex: 1,
@@ -88,5 +97,11 @@ const style = StyleSheet.create({
         color: 'white',
         fontSize: fontSizeConst.subTitle,
         includeFontPadding: false,
+    },
+    tagBg: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    tagText: {
+        color: 'white',
     },
 });

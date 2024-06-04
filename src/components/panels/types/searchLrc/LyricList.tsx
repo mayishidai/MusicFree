@@ -2,16 +2,16 @@ import React, {memo} from 'react';
 import rpx from '@/utils/rpx';
 import searchResultStore, {ISearchLyricResult} from './searchResultStore';
 import Empty from '@/components/base/empty';
-import {EDeviceEvents, RequestStateCode} from '@/constants/commonConst';
+import {RequestStateCode} from '@/constants/commonConst';
 import Loading from '@/components/base/loading';
 import LyricItem from '@/components/mediaItem/LyricItem';
 import ListReachEnd from '@/components/base/listReachEnd';
 import {FlatList} from 'react-native-gesture-handler';
 import Toast from '@/utils/toast';
 import {associateLrc} from '@/utils/mediaItem';
-import MusicQueue from '@/core/musicQueue';
 import {hidePanel} from '../../usePanel';
-import {DeviceEventEmitter} from 'react-native';
+import TrackPlayer from '@/core/trackPlayer';
+import LyricManager from '@/core/lyricManager';
 
 interface ILyricListWrapperProps {
     route: {
@@ -34,7 +34,7 @@ function LyricListImpl(props: ILyricListProps) {
     const data = props.data;
     const searchState = data?.state ?? RequestStateCode.IDLE;
 
-    return searchState === RequestStateCode.PENDING_FP ? (
+    return searchState === RequestStateCode.PENDING_FIRST_PAGE ? (
         <Loading />
     ) : (
         <FlatList
@@ -48,13 +48,12 @@ function LyricListImpl(props: ILyricListProps) {
                     lyricItem={item}
                     onPress={async () => {
                         try {
-                            await associateLrc(
-                                MusicQueue.getCurrentMusicItem(),
-                                item,
-                            );
-                            DeviceEventEmitter.emit(
-                                EDeviceEvents.REFRESH_LYRIC,
-                            );
+                            const currentMusic = TrackPlayer.getCurrentMusic();
+                            if (!currentMusic) {
+                                return;
+                            }
+                            await associateLrc(currentMusic, item);
+                            LyricManager.refreshLyric(false, true);
                             Toast.success('设置成功~');
                             hidePanel();
                             // 触发刷新歌词
